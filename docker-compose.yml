@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  asaase-hq:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/asaase/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

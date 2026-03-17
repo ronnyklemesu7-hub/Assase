@@ -1,0 +1,11 @@
+{
+  "ground_serial_port": "COM3",
+  "aqua_serial_port": "COM4",
+  "baud_rate": 9600,
+  "sms_port": "COM5",
+  "turbidity_critical_ntu": 50.0,
+  "ph_critical_min": 6.0,
+  "robot_offline_timeout_min": 10,
+  "sms_recipients": ["+233XXXXXXXXX"],
+  "sms_dedup_window_min": 30
+}

@@ -1,0 +1,25 @@
+# Configuration for Environmental Monitoring System
+
+monitor:
+  # Tree cover detection
+  green_threshold: 120           # Minimum G channel to consider "green"
+  green_saturation_min: 40       # Minimum S in HSV to reduce noise
+  tree_alert_threshold: 0.30     # Alert if green ratio drops below this
+
+  # Excavation detection
+  bg_history: 300
+  bg_var_thresh: 16
+  excavation_area_min: 10000     # Min contour area
+  excavation_solid_thresh: 0.6   # Solidity threshold to filter blobs
+
+  # Activity detection
+  motion_mag_threshold: 2.0
+  activity_area_min: 2000
+
+filtration:
+  debris_capacity_max: 100.0
+  debris_dump_threshold: 80.0
+  filter_dp_max_kpa: 25.0
+  backwash_duration_sec: 10
+  dump_duration_sec: 5
+  cycle_period_sec: 1.0

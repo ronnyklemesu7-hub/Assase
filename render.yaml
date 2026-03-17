@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ecoguard-monolith
+    env: python
+    buildCommand: "pip install -r requirements.txt flask flask-cors pyjwt bcrypt google-genai && cd dashboard && npm install && npm run build && cd .."
+    startCommand: "python dashboard_api.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        value: "" # User to provide in Render dashboard
