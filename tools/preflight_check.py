@@ -6,8 +6,8 @@ import requests
 
 def check_env():
     print("[1/4] Checking Environment...")
-    if not os.path.exists('data'):
-        print("  - ERROR: 'data' directory missing!")
+    if not os.path.exists('runs'):
+        print("  - ERROR: 'runs' directory missing!")
         return False
     print("  - OK: Environment looks good.")
     return True
@@ -38,7 +38,7 @@ def check_db():
     print("[4/4] Checking Database Health...")
     import sqlite3
     try:
-        conn = sqlite3.connect('data/asaase.db')
+        conn = sqlite3.connect('runs/data.db')
         c = conn.cursor()
         c.execute("SELECT count(*) FROM system_settings")
         print(f"  - OK: Database connected and responding.")
