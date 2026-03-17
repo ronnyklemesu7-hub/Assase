@@ -5,7 +5,13 @@ __pycache__/
 venv/
 .env
 runs/*.db
+runs/*.db-shm
+runs/*.db-wal
+runs/*.db-journal
 runs/filtration_latest.json
+*.log
+runs/logs/
+*.egg-info/
 
 # Node
 node_modules/
