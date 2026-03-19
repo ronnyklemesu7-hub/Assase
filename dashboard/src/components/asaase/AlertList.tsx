@@ -7,9 +7,10 @@ interface AlertListProps {
   page: number;
   setPage: (p: number) => void;
   onViewReport: (alertId: number) => void;
+  hasMore?: boolean;
 }
 
-const AlertList: React.FC<AlertListProps> = ({ alerts, page, setPage, onViewReport }) => {
+const AlertList: React.FC<AlertListProps> = ({ alerts, page, setPage, onViewReport, hasMore = true }) => {
   const safeAlerts = Array.isArray(alerts) ? alerts : [];
 
   return (
@@ -40,7 +41,7 @@ const AlertList: React.FC<AlertListProps> = ({ alerts, page, setPage, onViewRepo
                  
                  <div className="flex items-center justify-between relative z-10">
                     <div className="flex-1 min-w-0">
-                       <div className="text-[11px] font-black text-white uppercase italic tracking-tighter leading-tight truncate">{alert.alert_type} DETECTED</div>
+                       <div className="text-[11px] font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-tight truncate">{alert.alert_type} DETECTED</div>
                        {alert.sms_sent && (
                           <div className="flex items-center gap-1 mt-1">
                              <CheckCircle2 size={10} className="text-emerald-500" />
@@ -69,8 +70,9 @@ const AlertList: React.FC<AlertListProps> = ({ alerts, page, setPage, onViewRepo
                </button>
                <span className="text-[9px] text-slate-500 font-mono tracking-widest uppercase">Page {page}</span>
                <button 
+                 disabled={!hasMore}
                  onClick={(e) => { e.stopPropagation(); setPage(page + 1); }}
-                 className="p-1.5 rounded-lg bg-white/5 border border-white/5 text-slate-600 hover:text-white"
+                 className="p-1.5 rounded-lg bg-white/5 border border-white/5 text-slate-600 hover:text-white disabled:opacity-20"
                >
                  <ChevronRight size={14} />
                </button>

@@ -36,7 +36,7 @@ const DistributionView: React.FC<DistributionViewProps> = ({ data }) => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="flex items-center gap-4 bg-slate-50 dark:bg-white/2 p-4 rounded-2xl border border-slate-200 dark:border-white/5 relative group hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+            className="flex items-center gap-4 bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-200 dark:border-white/5 relative group hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
           >
             <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
               <Home size={20} />

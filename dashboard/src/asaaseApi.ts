@@ -100,48 +100,47 @@ const getAuthHeader = (): { Authorization?: string } => {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 
+const authFetch = (url: string, init: RequestInit = {}) =>
+    fetch(url, { ...init, headers: { ...getAuthHeader(), ...(init.headers as Record<string, string> || {}) } });
+
 export const fetchAsaaseStatus = async (): Promise<RobotStatus> => {
-  const res = await fetch(`${API_BASE}/status`);
+  const res = await authFetch(`${API_BASE}/status`);
   return res.json();
 };
 
 export const fetchGroundLatest = async (): Promise<GroundTelemetry[]> => {
-  const res = await fetch(`${API_BASE}/ground/latest`);
+  const res = await authFetch(`${API_BASE}/ground/latest`);
   return res.json();
 };
 
 export const fetchAquaLatest = async (): Promise<AquaTelemetry[]> => {
-  const res = await fetch(`${API_BASE}/aqua/latest`);
+  const res = await authFetch(`${API_BASE}/aqua/latest`);
   return res.json();
 };
 
 export const fetchGroundHeatmap = async (): Promise<any> => {
-  const res = await fetch(`${API_BASE}/ground/heatmap`);
+  const res = await authFetch(`${API_BASE}/ground/heatmap`);
   return res.json();
 };
 
 export const fetchAquaHeatmap = async (): Promise<any> => {
-  const res = await fetch(`${API_BASE}/aqua/heatmap`);
+  const res = await authFetch(`${API_BASE}/aqua/heatmap`);
   return res.json();
 };
 
 export const fetchAsaaseAlerts = async (page = 1, limit = 10): Promise<AsaaseAlert[]> => {
-  const res = await fetch(`${API_BASE}/alerts?page=${page}&limit=${limit}`);
+  const res = await authFetch(`${API_BASE}/alerts?page=${page}&limit=${limit}`);
   return res.json();
 };
 
 export const fetchReport = async (alertId: number): Promise<RemediationReport> => {
-  const res = await fetch(`${API_BASE}/reports/${alertId}`);
+  const res = await authFetch(`${API_BASE}/reports/${alertId}`);
   if (!res.ok) throw new Error('Report not found');
   return res.json();
 };
 
 export const uploadGroundWaypoints = async (robot_id: string, waypoints: {lat: number, lon: number}[]) => {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  const auth = getAuthHeader();
-  if (auth.Authorization) {
-    (headers as any).Authorization = auth.Authorization;
-  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeader() };
 
   const res = await fetch(`${API_BASE}/ground/waypoints`, {
     method: 'POST',
@@ -152,11 +151,7 @@ export const uploadGroundWaypoints = async (robot_id: string, waypoints: {lat: n
 };
 
 export const uploadAquaRoute = async (robot_id: string, waypoints: {lat: number, lon: number}[]) => {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  const auth = getAuthHeader();
-  if (auth.Authorization) {
-    (headers as any).Authorization = auth.Authorization;
-  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeader() };
 
   const res = await fetch(`${API_BASE}/aqua/route`, {
     method: 'POST',
@@ -167,16 +162,12 @@ export const uploadAquaRoute = async (robot_id: string, waypoints: {lat: number,
 };
 
 export const fetchControlSettings = async (robotId: string): Promise<RobotSettings> => {
-  const res = await fetch(`${API_BASE}/control/settings/${robotId}`);
+  const res = await authFetch(`${API_BASE}/control/settings/${robotId}`);
   return res.json();
 };
 
 export const updateControlMode = async (robot_id: string, mode: ControlMode) => {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  const auth = getAuthHeader();
-  if (auth.Authorization) {
-    (headers as any).Authorization = auth.Authorization;
-  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeader() };
   const res = await fetch(`${API_BASE}/control/mode`, {
     method: 'POST',
     headers,
@@ -186,11 +177,7 @@ export const updateControlMode = async (robot_id: string, mode: ControlMode) => 
 };
 
 export const sendManualCommand = async (robot_id: string, command: string) => {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  const auth = getAuthHeader();
-  if (auth.Authorization) {
-    (headers as any).Authorization = auth.Authorization;
-  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeader() };
   const res = await fetch(`${API_BASE}/control/manual`, {
     method: 'POST',
     headers,
@@ -201,16 +188,12 @@ export const sendManualCommand = async (robot_id: string, command: string) => {
 
 export const fetchBaseSettings = async (): Promise<BaseSettings> => {
 
-  const res = await fetch(`${API_BASE}/base/settings`);
+  const res = await authFetch(`${API_BASE}/base/settings`);
   return res.json();
 };
 
 export const updateBaseMode = async (mode: ControlMode) => {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  const auth = getAuthHeader();
-  if (auth.Authorization) {
-    (headers as any).Authorization = auth.Authorization;
-  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeader() };
   const res = await fetch(`${API_BASE}/base/mode`, {
     method: 'POST',
     headers,
@@ -220,16 +203,12 @@ export const updateBaseMode = async (mode: ControlMode) => {
 };
 
 export const fetchPendingApprovals = async (): Promise<PendingApproval[]> => {
-  const res = await fetch(`${API_BASE}/control/approvals`);
+  const res = await authFetch(`${API_BASE}/control/approvals`);
   return res.json();
 };
 
 export const approveAction = async (approval_id: number, action: 'APPROVED' | 'REJECTED') => {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  const auth = getAuthHeader();
-  if (auth.Authorization) {
-    (headers as any).Authorization = auth.Authorization;
-  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeader() };
   const res = await fetch(`${API_BASE}/control/approve`, {
     method: 'POST',
     headers,
@@ -240,15 +219,15 @@ export const approveAction = async (approval_id: number, action: 'APPROVED' | 'R
 
 
 export const fetchGroundHistory = async (): Promise<{ts: number, confidence_score: number, battery_pct: number}[]> => {
-  const res = await fetch(`${API_BASE}/ground/history`);
+  const res = await authFetch(`${API_BASE}/ground/history`);
   return res.json();
 };
 
 export const fetchAquaHistory = async (): Promise<{ts: number, turbidity_ntu: number, ph_value: number, battery_pct: number}[]> => {
-  const res = await fetch(`${API_BASE}/aqua/history`);
+  const res = await authFetch(`${API_BASE}/aqua/history`);
   return res.json();
 };
 export const fetchSystemHealth = async () => {
-  const res = await fetch(`${API_BASE}/asaase/health`);
+  const res = await authFetch(`${API_BASE}/health`);
   return res.json();
 };

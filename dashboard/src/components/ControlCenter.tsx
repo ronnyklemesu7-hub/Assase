@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Settings2, Cpu, Power, Terminal, Play, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchLatestStats } from '../api';
+import { fetchLatestStats, systemControl } from '../api';
 import type { DashboardData } from '../api';
 import { useNotification } from './NotificationSystem';
 
@@ -36,16 +36,9 @@ const ControlCenter: React.FC = () => {
     const handleAction = async (label: string, endpoint: string) => {
         addLog(`Initiating ${label}...`, 'warn');
         try {
-            const response = await fetch(`http://localhost:5000/api/control/${endpoint}`, {
-                method: 'POST'
-            });
-            if (response.ok) {
-                addLog(`${label} command confirmed by EcoGuard Kernel.`, 'info');
-                notify(`${label} execution successful`, 'success');
-            } else {
-                addLog(`${label} failed: Server responded with error.`, 'err');
-                notify(`${label} failed`, 'error');
-            }
+            await systemControl(endpoint);
+            addLog(`${label} command confirmed by EcoGuard Kernel.`, 'info');
+            notify(`${label} execution successful`, 'success');
         } catch (e) {
             addLog(`${label} failed: Network or API error.`, 'err');
             notify('Network error', 'error');
@@ -55,7 +48,7 @@ const ControlCenter: React.FC = () => {
     return (
         <div className="p-8 space-y-8 animate-in slide-in-from-right-4 duration-500">
             <header>
-                <h2 className="text-3xl font-black text-white flex items-center gap-3">
+                <h2 className="text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3">
                     <Settings2 className="text-indigo-400" size={32} />
                     System Management Center
                 </h2>
@@ -67,7 +60,7 @@ const ControlCenter: React.FC = () => {
                     {/* Hardware Controls */}
                     <div className="glass-card p-1 overflow-hidden">
                         <div className="bg-white/5 p-6 border-b border-white/10 flex justify-between items-center">
-                            <h3 className="font-bold text-white flex items-center gap-2">
+                            <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                 <Cpu size={18} className="text-emerald-400" />
                                 Hardware Actuators
                             </h3>
@@ -99,7 +92,7 @@ const ControlCenter: React.FC = () => {
                 </div>
 
                 {/* Live Console */}
-                <div className="glass-card bg-black/40 border-slate-800 flex flex-col min-h-[500px]">
+                <div className="glass-card bg-slate-100 dark:bg-black/40 border-slate-300 dark:border-slate-800 flex flex-col min-h-[500px]">
                     <div className="flex items-center gap-2 p-4 border-b border-white/5 bg-slate-900/50">
                         <Terminal size={14} className="text-slate-400" />
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Command Terminal</span>
@@ -131,11 +124,11 @@ const ControlCenter: React.FC = () => {
                             ))}
                         </AnimatePresence>
                     </div>
-                    <div className="p-3 bg-white/2 border-t border-white/5 flex items-center gap-3">
+                    <div className="p-3 bg-slate-200/50 dark:bg-white/5 border-t border-slate-200 dark:border-white/5 flex items-center gap-3">
                         <span className="text-emerald-500 font-bold">$</span>
                         <input
                             type="text"
-                            className="bg-transparent border-none text-[11px] text-white focus:ring-0 flex-1 outline-none"
+                            className="bg-transparent border-none text-[11px] text-slate-900 dark:text-white focus:ring-0 flex-1 outline-none"
                             placeholder="Awaiting command..."
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {

@@ -12,8 +12,23 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ report, onClose }) => {
 
   if (!report) return null;
 
-  const en = JSON.parse(report.report_en);
-  const tw = JSON.parse(report.report_tw);
+  let en: any = null;
+  let tw: any = null;
+  try {
+    en = JSON.parse(report.report_en);
+    tw = JSON.parse(report.report_tw);
+  } catch {
+    return (
+      <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-8">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-12 rounded-[3rem] max-w-md w-full text-center space-y-6">
+          <ShieldAlert size={48} className="text-red-500 mx-auto" />
+          <h3 className="text-xl font-black text-slate-900 dark:text-white">Report Data Corrupted</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">The AI report could not be parsed. Please regenerate it from the alert.</p>
+          <button onClick={onClose} className="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl transition-all">Close</button>
+        </div>
+      </div>
+    );
+  }
 
   const handlePrint = () => {
     window.print();
@@ -186,7 +201,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ report, onClose }) => {
             </div>
 
             <div className="flex gap-4">
-               <button className="flex items-center gap-3 px-8 py-3 bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-300 dark:border-white/10 transition-all">
+               <button onClick={handlePrint} className="flex items-center gap-3 px-8 py-3 bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-300 dark:border-white/10 transition-all">
                   <Download size={16} /> Archive PDF
                </button>
                <button 

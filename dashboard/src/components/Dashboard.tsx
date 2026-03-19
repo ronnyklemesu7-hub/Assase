@@ -152,7 +152,7 @@ const Dashboard: React.FC = () => {
                 />
 
                 {/* Main Content Area */}
-                <div className="col-span-1 lg:col-span-2 space-y-6">
+                <div className="col-span-3 lg:col-span-2 space-y-6">
                     {/* Energy Trends Chart */}
                     <div className="glass-card p-6 min-h-[350px]">
                         <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
@@ -258,7 +258,7 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Distribution Grid */}
-                <DistributionView data={data.distribution} />
+                <div className="col-span-3"><DistributionView data={data.distribution} /></div>
             </main>
         </div>
     );

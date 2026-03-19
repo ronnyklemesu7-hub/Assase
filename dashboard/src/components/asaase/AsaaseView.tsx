@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bot, AlertCircle, RefreshCcw, Zap, Clock, Terminal, MessageSquare, Activity, Globe, Shield, Wifi, Battery, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AsaaseMap from './AsaaseMap';
@@ -9,6 +9,7 @@ import ControlHub from './ControlHub';
 import CameraFeed from './CameraFeed';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import * as api from '../../asaaseApi';
+import { useNotification } from '../NotificationSystem';
 
 /* ─── Localization Dictionary ─── */
 type LangKey = 'EN' | 'TW' | 'GA' | 'EW' | 'FR';
@@ -176,6 +177,10 @@ const AsaaseView: React.FC = () => {
   const t = dict[language];
 
   const [health, setHealth] = useState<any>(null);
+  const { notify } = useNotification();
+  const alertPageRef = useRef(alertPage);
+  useEffect(() => { alertPageRef.current = alertPage; }, [alertPage]);
+  const [hasMoreAlerts, setHasMoreAlerts] = useState(true);
 
   const fetchData = async () => {
     setIsRefreshing(true);
@@ -186,7 +191,7 @@ const AsaaseView: React.FC = () => {
         api.fetchAquaLatest(),
         api.fetchGroundHeatmap(),
         api.fetchAquaHeatmap(),
-        api.fetchAsaaseAlerts(alertPage, 10),
+        api.fetchAsaaseAlerts(alertPageRef.current, 10),
         api.fetchControlSettings(selectedRobot),
         api.fetchBaseSettings(),
         api.fetchPendingApprovals(),
@@ -198,6 +203,7 @@ const AsaaseView: React.FC = () => {
       setGroundHeatmap(gh);
       setAquaHeatmap(ah);
       setAlerts(alertsRes);
+      setHasMoreAlerts(alertsRes.length === 10);
       setRobotSettings(settingsRes);
       setBaseSettings(baseRes);
       setApprovals(appRes);
@@ -234,7 +240,7 @@ const AsaaseView: React.FC = () => {
       clearInterval(interval);
       clearInterval(clock);
     };
-  }, [alertPage, selectedRobot]);
+  }, [selectedRobot]);
 
   const handleMapClick = (lat: number, lon: number) => {
     setWaypoints([...waypoints, { lat, lon }]);
@@ -253,7 +259,7 @@ const AsaaseView: React.FC = () => {
       addConsoleLog(`Mission waypoints uploaded to ${robotId}`, 'info');
     } catch (e) {
       addConsoleLog(`Failed to upload waypoints to ${robotId}`, 'crit');
-      alert("Upload failed");
+      notify('Waypoint upload failed — check robot connection', 'error');
     }
   };
 
@@ -262,7 +268,7 @@ const AsaaseView: React.FC = () => {
       const report = await api.fetchReport(alertId);
       setSelectedReport(report);
     } catch (e) {
-      alert("Report not found");
+      notify('Report not found for this alert', 'error');
     }
   };
 
@@ -342,7 +348,7 @@ const AsaaseView: React.FC = () => {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-50 dark:bg-[#0f1115] flex flex-col font-sans animate-in fade-in duration-1000 transition-colors duration-300">
+    <div className="h-screen overflow-hidden bg-slate-50 dark:bg-[#0f1115] flex flex-col font-sans animate-in fade-in transition-colors duration-300" style={{animationDuration: '1000ms'}}>
       
       {/* ════════════════ TACTICAL SUB-NAV BAR ════════════════ */}
       <div className="flex items-center justify-between px-8 py-4 bg-[#0d1117] border-b border-white/5 relative z-20">
@@ -677,7 +683,8 @@ const AsaaseView: React.FC = () => {
                           alerts={alerts} 
                           page={alertPage} 
                           setPage={setAlertPage} 
-                          onViewReport={handleViewReport} 
+                          onViewReport={handleViewReport}
+                          hasMore={hasMoreAlerts} 
                        />
                     </div>
                  </div>

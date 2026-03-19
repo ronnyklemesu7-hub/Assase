@@ -1,7 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { Gamepad, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Zap, Shield, Sprout, FlaskConical, Radar, Activity, Droplet, Terminal } from 'lucide-react';
 import type { RobotSettings } from '../../asaaseApi';
 import * as api from '../../asaaseApi';
+import { useNotification } from '../NotificationSystem';
 
 interface ControlHubProps {
   robotId: string;
@@ -26,13 +27,17 @@ const ControlHub: React.FC<ControlHubProps> = ({
   const [dosingVal, setDosingVal] = useState(50); // Default 50g/m2 or 50ml
   const [showManualConfirm, setShowManualConfirm] = useState(false);
   const [pendingManualCmd, setPendingManualCmd] = useState<string | null>(null);
+  const { notify } = useNotification();
 
   const currentControlMode = settings?.control_mode || 'FULLY_AUTO';
   const currentBaseMode = baseSettings?.operation_mode || 'FULLY_AUTO';
 
+  const controlModeRef = useRef(currentControlMode);
+  useEffect(() => { controlModeRef.current = currentControlMode; }, [currentControlMode]);
+
   const sendCommand = useCallback(async (command: string) => {
     if (currentControlMode === 'FULLY_AUTO' && command !== 'HALT_ALL') {
-      alert("Manual override locked in AUTO mode. Switch to MANUAL first.");
+      notify('Switch to MANUAL mode to send commands', 'warning');
       return;
     }
 
@@ -48,14 +53,18 @@ const ControlHub: React.FC<ControlHubProps> = ({
     } catch (e) {
       console.error("Command failed", e);
     }
-  }, [robotId, settings, showManualConfirm, onSettingsUpdate, currentControlMode]);
+  }, [robotId, showManualConfirm, onSettingsUpdate, notify]);
 
-  const confirmManual = () => {
-      if (pendingManualCmd) {
-          api.sendManualCommand(robotId, pendingManualCmd);
+  const confirmManual = async () => {
+      if (!pendingManualCmd) return;
+      try {
+          await api.sendManualCommand(robotId, pendingManualCmd);
+          onSettingsUpdate?.();
+      } catch {
+          notify('Command failed — robot may be offline', 'error');
+      } finally {
           setPendingManualCmd(null);
           setShowManualConfirm(false);
-          onSettingsUpdate?.();
       }
   };
 

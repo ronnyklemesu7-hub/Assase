@@ -1,5 +1,5 @@
 import React from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Label } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface WaterGaugeProps {
     title: string;
@@ -21,15 +21,15 @@ const WaterGauge: React.FC<WaterGaugeProps> = ({ title, value, min, max, unit, c
     return (
         <div className="glass-card p-6 flex flex-col items-center">
             <h4 className="text-slate-500 dark:text-gray-400 text-sm font-medium mb-4 self-start">{title}</h4>
-            <div style={{ width: '100%', height: 180 }}>
+            <div style={{ width: '100%', height: 130, position: 'relative' }}>
                 <ResponsiveContainer>
                     <PieChart>
                         <Pie
                             data={data}
                             cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
+                            cy="100%"
+                            innerRadius={55}
+                            outerRadius={75}
                             startAngle={180}
                             endAngle={0}
                             paddingAngle={0}
@@ -38,15 +38,14 @@ const WaterGauge: React.FC<WaterGaugeProps> = ({ title, value, min, max, unit, c
                         >
                             <Cell fill={`hsl(${color})`} />
                             <Cell fill="hsl(var(--border))" />
-                            <Label
-                                value={`${value}${unit}`}
-                                position="center"
-                                fill="hsl(var(--text-main))"
-                                style={{ fontSize: '24px', fontWeight: 'bold' }}
-                            />
                         </Pie>
                     </PieChart>
                 </ResponsiveContainer>
+                <div style={{ position: 'absolute', bottom: 4, width: '100%', textAlign: 'center' }}>
+                    <span style={{ fontSize: 20, fontWeight: 'bold', color: 'hsl(var(--text-main))' }}>
+                        {value}{unit}
+                    </span>
+                </div>
             </div>
             <div className="flex justify-between w-full mt-2 text-xs text-slate-400 dark:text-gray-500">
                 <span>{min}{unit}</span>

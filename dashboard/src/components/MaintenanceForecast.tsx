@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Calendar, Clock, AlertCircle, ShieldCheck, Download } from 'lucide-react';
 import type { FiltrationStatus } from '../api';
+import { useNotification } from './NotificationSystem';
 import { fetchForecast } from '../api';
 
 interface MaintenanceForecastProps {
@@ -11,6 +12,7 @@ interface MaintenanceForecastProps {
 const MaintenanceForecast: React.FC<MaintenanceForecastProps> = ({ data }) => {
     const [forecast, setForecast] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const { notify } = useNotification();
 
     useEffect(() => {
         const getForecast = async () => {
@@ -66,7 +68,7 @@ const MaintenanceForecast: React.FC<MaintenanceForecastProps> = ({ data }) => {
                         </div>
                     </div>
                     
-                    <div className="p-4 bg-slate-100 dark:bg-white/2 rounded-2xl border border-slate-200 dark:border-white/5">
+                    <div className="p-4 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5">
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-[10px] text-slate-500 font-bold uppercase">Confidence Score</span>
                             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{forecast.confidence_score}%</span>
@@ -94,11 +96,23 @@ const MaintenanceForecast: React.FC<MaintenanceForecastProps> = ({ data }) => {
 
             <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/5">
                 <div className="flex gap-2">
-                    <button className="flex-1 py-2 rounded-xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-[10px] font-bold text-slate-800 dark:text-white transition-all border border-slate-300 dark:border-white/5 uppercase tracking-widest">
+                    <button
+                        onClick={() => notify('Service scheduling — coming in next release', 'info')}
+                        className="flex-1 py-2 rounded-xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-[10px] font-bold text-slate-800 dark:text-white transition-all border border-slate-300 dark:border-white/5 uppercase tracking-widest">
                         Schedule Service
                     </button>
-                    <button className="flex-1 py-2 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/30 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 transition-all border border-emerald-500/20 uppercase tracking-widest">
-                        Export Projections
+                    <button
+                        onClick={() => {
+                            if (!forecast) return;
+                            const csv = `Field,Value\nUrgency,${forecast.urgency}\nHours Until Clog,${forecast.predicted_hours_until_clog}\nHours Until Net Full,${forecast.predicted_hours_until_net_full}\nConfidence,${forecast.confidence_score}%\nSummary,${forecast.recommendation_summary}\n`;
+                            const blob = new Blob([csv], { type: 'text/csv' });
+                            const a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = `forecast-${new Date().toISOString().slice(0,10)}.csv`;
+                            a.click();
+                        }}
+                        className="flex-1 py-2 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/30 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 transition-all border border-emerald-500/20 uppercase tracking-widest flex items-center justify-center gap-1">
+                        <Download size={10} /> Export CSV
                     </button>
                 </div>
             </div>

@@ -32,10 +32,12 @@ const navItems = [
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, onLogout }) => {
   const { theme, setTheme } = useTheme();
+  const effectiveIsDark = theme === 'dark' ||
+    (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   return (
     <aside 
-      className="w-64 h-screen bg-[#0d1117]/80 backdrop-blur-3xl border-r border-white/5 flex flex-col sticky top-0 z-50 shadow-2xl"
+      className="w-64 h-screen bg-white dark:bg-[#0d1117]/80 backdrop-blur-3xl border-r border-slate-200 dark:border-white/5 flex flex-col sticky top-0 z-50 shadow-2xl"
     >
       <div className="p-8 flex flex-col gap-1 overflow-hidden">
         <div className="flex items-center gap-3">
@@ -81,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, onLogout }
 
       <div className="p-4 border-t border-slate-200 dark:border-white/5 flex flex-col gap-2">
         <button 
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() => setTheme(effectiveIsDark ? 'light' : 'dark')}
           className="w-full h-10 flex items-center justify-center rounded-lg bg-slate-200/50 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}

@@ -9,13 +9,13 @@ import datetime
 import time
 from inspect import signature
 from functools import wraps
-from google import genai
+import google.generativeai as genai_sdk
 
 from src.energy.storage import EnergyDB, EnergyDBConfig
 from src.asaase import init_asaase
 from src.asaase.logger import app_logger, api_logger
 
-app = Flask(__name__, static_folder='dashboard/dist', static_url_path='/')
+app = Flask(__name__, static_folder='.', static_url_path='/')
 CORS(app)  # Enable CORS for React development server
 
 # Initialize ASAASE Robot Control System
@@ -26,7 +26,10 @@ DB_PATH = os.path.join(os.getcwd(), "runs", "data.db")
 ENERGY_DB_PATH = os.path.join(os.getcwd(), "runs", "energy.db")
 SECRET_KEY = os.environ.get("JWT_SECRET", "super-secret-key")
 
-# Ensure database schema and default users exist on startup
+# Ensure runs/ directory and database schema exist on startup (runs at import time, works with gunicorn)
+import os as _os
+_os.makedirs(_os.path.dirname(DB_PATH), exist_ok=True)
+_os.makedirs(_os.path.dirname(ENERGY_DB_PATH), exist_ok=True)
 from src.storage.sqlite_store import SQLiteStore, StoreConfig
 SQLiteStore(StoreConfig(path=DB_PATH)).close()
 
@@ -267,8 +270,14 @@ def system_control(action):
             data = json.load(f)
             if action == 'net-clear':
                 data['state'] = 'CLEAR_NETS'
+                data.setdefault('actuators', {})['gears_active'] = True
             elif action == 'backwash':
                 data['state'] = 'BACKWASH'
+                data.setdefault('actuators', {})['backwash_on'] = True
+            elif action == 'reset':
+                data['state'] = 'FILTERING'
+                data['actuators'] = {'gears_active': False, 'backwash_on': False, 'pump_active': True}
+                data['last_action'] = {'type': 'reset', 'ts': time.time()}
             
         with open(filt_path, 'w') as f:
             json.dump(data, f)
@@ -331,11 +340,9 @@ def get_forecast():
     gemini_key = os.environ.get("GEMINI_API_KEY")
     if gemini_key:
         try:
-            client = genai.Client(api_key=gemini_key)
-            response = client.models.generate_content(
-                model='gemini-2.0-flash',
-                contents=prompt
-            )
+            genai_sdk.configure(api_key=gemini_key)
+            model = genai_sdk.GenerativeModel('gemini-2.0-flash')
+            response = model.generate_content(prompt)
             # Parse JSON from LLM response
             text = response.text.strip()
             if text.startswith("```json"):
@@ -365,10 +372,10 @@ def get_forecast():
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
+    if path != "" and os.path.exists(os.path.join('.', path)):
+        return send_from_directory('.', path)
     else:
-        return send_from_directory(app.static_folder, 'index.html')
+        return send_from_directory('.', 'dashboard.html')
 
 if __name__ == '__main__':
     # Ensure the database directory exists
