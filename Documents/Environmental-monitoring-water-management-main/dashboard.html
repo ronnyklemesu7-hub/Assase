@@ -1,0 +1,3430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECOGUARDHQ — Tactical Intelligence Hub</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #05080d;
+      --bg2: #080e18;
+      --bg3: #0c1420;
+      --card: #091018;
+      --bdr: rgba(0, 255, 160, 0.08);
+      --bdr2: rgba(0, 255, 160, 0.18);
+      --em: #00ffa0;
+      --em2: #00cc80;
+      --em3: rgba(0, 255, 160, 0.12);
+      --blue: #00b4ff;
+      --amber: #ffaa00;
+      --red: #ff4060;
+      --purple: #b060ff;
+      --cyan: #00e5ff;
+      --text: #c8e0d0;
+      --muted: #4a7060;
+      --faint: #0f1e18;
+      --font: 'Rajdhani', sans-serif;
+      --mono: 'Share Tech Mono', 'Courier New', monospace;
+      --glow-em: 0 0 20px rgba(0, 255, 160, 0.3);
+      --glow-blu: 0 0 20px rgba(0, 180, 255, 0.3);
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      overflow: hidden
+    }
+
+    /* ── AMBIENT BG ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 600px 400px at 20% 80%, rgba(0, 255, 160, 0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 300px at 80% 20%, rgba(0, 180, 255, 0.04) 0%, transparent 70%);
+    }
+
+    /* ── SCANLINE OVERLAY ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
+      animation: scanmove 8s linear infinite;
+    }
+
+    @keyframes scanmove {
+      0% {
+        background-position: 0 0
+      }
+
+      100% {
+        background-position: 0 100px
+      }
+    }
+
+    /* ── LAYOUT ── */
+    #app {
+      display: flex;
+      height: 100vh;
+      position: relative;
+      z-index: 2
+    }
+
+    /* ══════════════ SIDEBAR ══════════════ */
+    #sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, var(--bg2) 0%, var(--bg3) 100%);
+      border-right: 1px solid var(--bdr);
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      position: relative;
+      z-index: 10;
+    }
+
+    #sidebar.collapsed {
+      width: 52px
+    }
+
+    /* Sidebar grid overlay */
+    #sidebar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(var(--bdr) 1px, transparent 1px), linear-gradient(90deg, var(--bdr) 1px, transparent 1px);
+      background-size: 20px 20px;
+      opacity: 0.4;
+    }
+
+    .sb-logo {
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid var(--bdr);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 68px;
+      position: relative;
+    }
+
+    .sb-logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--em) 0%, var(--em2) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--glow-em);
+      animation: iconPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes iconPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 12px rgba(0, 255, 160, 0.3)
+      }
+
+      50% {
+        box-shadow: 0 0 28px rgba(0, 255, 160, 0.6)
+      }
+    }
+
+    .sb-logo-icon svg {
+      width: 18px;
+      height: 18px;
+      color: #000
+    }
+
+    .sb-logo-text {
+      overflow: hidden;
+      white-space: nowrap
+    }
+
+    .sb-logo-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+      line-height: 1.2
+    }
+
+    .sb-logo-name span {
+      color: var(--em)
+    }
+
+    .sb-logo-sub {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+      margin-top: 2px
+    }
+
+    nav {
+      flex: 1;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 10px;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 0;
+      background: var(--em);
+      border-radius: 0 2px 2px 0;
+      transition: height 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 255, 160, 0.05);
+      color: var(--text)
+    }
+
+    .nav-btn:hover::before {
+      height: 60%
+    }
+
+    .nav-btn.active {
+      background: rgba(0, 255, 160, 0.08);
+      color: var(--em)
+    }
+
+    .nav-btn.active::before {
+      height: 100%
+    }
+
+    .nav-btn svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      transition: transform 0.2s
+    }
+
+    .nav-btn:hover svg {
+      transform: scale(1.1)
+    }
+
+    .nav-btn .nb-label {
+      overflow: hidden;
+      white-space: nowrap;
+      transition: opacity 0.2s, max-width 0.3s
+    }
+
+    #sidebar.collapsed .nb-label {
+      opacity: 0;
+      max-width: 0;
+      overflow: hidden
+    }
+
+    #sidebar.collapsed .nav-btn {
+      justify-content: center;
+      padding: 10px
+    }
+
+    .sb-bottom {
+      padding: 10px 8px;
+      border-top: 1px solid var(--bdr);
+      display: flex;
+      gap: 6px;
+    }
+
+    #sidebar.collapsed .sb-bottom {
+      flex-direction: column;
+      align-items: center
+    }
+
+    .sb-action {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--bdr);
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sb-action:hover {
+      border-color: var(--bdr2);
+      color: var(--text);
+      background: rgba(0, 255, 160, 0.04)
+    }
+
+    .sb-action.logout {
+      color: var(--red);
+      border-color: rgba(255, 64, 96, 0.2)
+    }
+
+    .sb-action.logout:hover {
+      background: rgba(255, 64, 96, 0.08)
+    }
+
+    .sb-action svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0
+    }
+
+    #sidebar.collapsed .sb-action .sb-action-txt {
+      display: none
+    }
+
+    #sidebar.collapsed .sb-action {
+      flex: none;
+      width: 36px;
+      padding: 8px
+    }
+
+    /* Collapse button */
+    #collapse-btn {
+      position: fixed;
+      top: 50%;
+      left: 208px;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 44px;
+      border-radius: 0 6px 6px 0;
+      background: var(--bg3);
+      border: 1px solid var(--bdr2);
+      border-left: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      z-index: 100;
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s;
+    }
+
+    #collapse-btn:hover {
+      color: var(--em)
+    }
+
+    #collapse-btn svg {
+      width: 12px;
+      height: 12px;
+      transition: transform 0.3s
+    }
+
+    body.sb-off #collapse-btn {
+      left: 40px
+    }
+
+    body.sb-off #collapse-btn svg {
+      transform: rotate(180deg)
+    }
+
+    /* ══════════════ MAIN ══════════════ */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden
+    }
+
+    #main::-webkit-scrollbar {
+      width: 3px
+    }
+
+    #main::-webkit-scrollbar-thumb {
+      background: var(--bdr2)
+    }
+
+    /* ══════════════ VIEWS ══════════════ */
+    .view {
+      display: none;
+      padding: 24px 28px 40px;
+      animation: viewIn 0.4s ease forwards
+    }
+
+    .view.active {
+      display: block
+    }
+
+    @keyframes viewIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* ══════════════ LOGIN ══════════════ */
+    #view-login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+    }
+
+    #view-login.hidden {
+      display: none
+    }
+
+    .login-outer {
+      position: relative;
+      animation: loginAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes loginAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* Corner decorations */
+    .login-outer::before,
+    .login-outer::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--em);
+      border-style: solid;
+    }
+
+    .login-outer::before {
+      top: -3px;
+      left: -3px;
+      border-width: 2px 0 0 2px
+    }
+
+    .login-outer::after {
+      bottom: -3px;
+      right: -3px;
+      border-width: 0 2px 2px 0
+    }
+
+    .login-card {
+      width: 380px;
+      background: var(--bg2);
+      border: 1px solid var(--bdr2);
+      border-radius: 4px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--em), transparent);
+      animation: scanBeam 3s ease-in-out infinite;
+    }
+
+    @keyframes scanBeam {
+
+      0%,
+      100% {
+        opacity: 0.3
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    .login-head {
+      text-align: center;
+      margin-bottom: 32px
+    }
+
+    .login-icon-wrap {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 14px;
+      background: rgba(0, 255, 160, 0.06);
+      border: 1px solid rgba(0, 255, 160, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .login-icon-wrap::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 255, 160, 0.15);
+      animation: ringPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes ringPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.5
+      }
+
+      50% {
+        transform: scale(1.08);
+        opacity: 0
+      }
+    }
+
+    .login-icon-wrap svg {
+      width: 28px;
+      height: 28px;
+      color: var(--em)
+    }
+
+    .login-head h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px
+    }
+
+    .login-head h1 span {
+      color: var(--em)
+    }
+
+    .login-head p {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-top: 4px;
+      letter-spacing: 0.15em
+    }
+
+    .fgroup {
+      margin-bottom: 18px
+    }
+
+    .fgroup label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+      margin-bottom: 7px
+    }
+
+    .finput-wrap {
+      position: relative
+    }
+
+    .finput-wrap svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--muted)
+    }
+
+    .finput-wrap input {
+      width: 100%;
+      padding: 10px 11px 10px 36px;
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .finput-wrap input:focus {
+      border-color: var(--em);
+      box-shadow: 0 0 0 2px rgba(0, 255, 160, 0.1)
+    }
+
+    .login-err {
+      background: rgba(255, 64, 96, 0.08);
+      border: 1px solid rgba(255, 64, 96, 0.3);
+      border-radius: 4px;
+      padding: 9px 12px;
+      font-size: 11px;
+      color: #ff8090;
+      margin-bottom: 14px;
+      display: none;
+      font-family: var(--mono);
+    }
+
+    .login-err.show {
+      display: block
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--em);
+      border-radius: 4px;
+      background: rgba(0, 255, 160, 0.08);
+      color: var(--em);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--em);
+      transform: translateX(-100%);
+      transition: transform 0.3s;
+      z-index: -1;
+    }
+
+    .btn-login:hover {
+      color: #000
+    }
+
+    .btn-login:hover::before {
+      transform: none
+    }
+
+    .btn-login:disabled {
+      opacity: 0.4;
+      cursor: not-allowed
+    }
+
+    /* ══════════════ PAGE HEADER ══════════════ */
+    .ph {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end
+    }
+
+    .ph-left h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ph-left h2 svg {
+      width: 26px;
+      height: 26px
+    }
+
+    .ph-left p {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      margin-top: 2px;
+      font-family: var(--mono)
+    }
+
+    .ph-right {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    /* LIVE badge */
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      border-radius: 3px;
+      background: rgba(0, 255, 160, 0.06);
+      border: 1px solid rgba(0, 255, 160, 0.2);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--em);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--em);
+      animation: blink 1.2s ease infinite
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: 0.3;
+        transform: scale(0.7)
+      }
+    }
+
+    /* Health badge */
+    .h-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+      letter-spacing: 0.05em;
+    }
+
+    /* ══════════════ CARDS ══════════════ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      transition: border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 160, 0.15), transparent);
+    }
+
+    .card:hover {
+      border-color: var(--bdr2)
+    }
+
+    /* Grids */
+    .g4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 18px
+    }
+
+    .g3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px
+    }
+
+    .g2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px
+    }
+
+    .g-main {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px
+    }
+
+    @media(min-width:1300px) {
+      .g-main {
+        grid-template-columns: 2fr 1fr
+      }
+    }
+
+    /* ── STAT CARDS ── */
+    .scard {
+      padding: 18px;
+      cursor: default
+    }
+
+    .scard:hover {
+      transform: none
+    }
+
+    .scard-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      transition: box-shadow 0.3s
+    }
+
+    .scard-icon svg {
+      width: 16px;
+      height: 16px
+    }
+
+    .scard-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-family: var(--mono);
+      margin-bottom: 4px
+    }
+
+    .scard-val {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      font-family: var(--mono)
+    }
+
+    .scard-val .unit {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 1px
+    }
+
+    .scard-trend {
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 6px;
+      font-family: var(--mono)
+    }
+
+    .ic-em {
+      background: rgba(0, 255, 160, 0.1);
+      color: var(--em)
+    }
+
+    .ic-blu {
+      background: rgba(0, 180, 255, 0.1);
+      color: var(--blue)
+    }
+
+    .ic-amb {
+      background: rgba(255, 170, 0, 0.1);
+      color: var(--amber)
+    }
+
+    .ic-pur {
+      background: rgba(176, 96, 255, 0.1);
+      color: var(--purple)
+    }
+
+    .ic-red {
+      background: rgba(255, 64, 96, 0.1);
+      color: var(--red)
+    }
+
+    .scard:hover .ic-em {
+      box-shadow: 0 0 14px rgba(0, 255, 160, 0.3)
+    }
+
+    .scard:hover .ic-blu {
+      box-shadow: 0 0 14px rgba(0, 180, 255, 0.3)
+    }
+
+    .scard:hover .ic-amb {
+      box-shadow: 0 0 14px rgba(255, 170, 0, 0.3)
+    }
+
+    /* ── CHART CARDS ── */
+    .ccrd {
+      padding: 20px
+    }
+
+    .ccrd-head {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .ccrd-head .htitle {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .ccrd-head .htitle svg {
+      width: 15px;
+      height: 15px
+    }
+
+    /* ── SECTION TITLE ── */
+    .stitle {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      font-family: var(--mono);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--bdr);
+    }
+
+    /* ── CHIPS ── */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: var(--mono);
+    }
+
+    .cem {
+      background: rgba(0, 255, 160, 0.1);
+      color: var(--em);
+      border: 1px solid rgba(0, 255, 160, 0.25)
+    }
+
+    .camb {
+      background: rgba(255, 170, 0, 0.1);
+      color: var(--amber);
+      border: 1px solid rgba(255, 170, 0, 0.25)
+    }
+
+    .cred {
+      background: rgba(255, 64, 96, 0.1);
+      color: var(--red);
+      border: 1px solid rgba(255, 64, 96, 0.25)
+    }
+
+    .cblu {
+      background: rgba(0, 180, 255, 0.1);
+      color: var(--blue);
+      border: 1px solid rgba(0, 180, 255, 0.25)
+    }
+
+    .cpur {
+      background: rgba(176, 96, 255, 0.1);
+      color: var(--purple);
+      border: 1px solid rgba(176, 96, 255, 0.25)
+    }
+
+    /* ══════════════ GAUGES ══════════════ */
+    .gauge-wrap {
+      padding: 18px
+    }
+
+    .gauge-title {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-family: var(--mono);
+      margin-bottom: 10px
+    }
+
+    .gauge-svg-wrap {
+      position: relative;
+      display: inline-block
+    }
+
+    .gauge-val {
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      font-family: var(--mono);
+      white-space: nowrap;
+    }
+
+    .gauge-range {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-top: 3px
+    }
+
+    /* ══════════════ FILTRATION ══════════════ */
+    .pipe-track {
+      position: relative;
+      height: 4px;
+      background: rgba(0, 255, 160, 0.06);
+      border-radius: 2px;
+      overflow: hidden
+    }
+
+    .pipe-flow {
+      position: absolute;
+      top: 0;
+      left: -30%;
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--em), transparent);
+      animation: pipeAnim 1.8s linear infinite;
+    }
+
+    .pipe-flow.off {
+      animation: none;
+      opacity: 0
+    }
+
+    @keyframes pipeAnim {
+      to {
+        left: 130%
+      }
+    }
+
+    .filt-stage {
+      text-align: center
+    }
+
+    .filt-stage .slabel {
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-family: var(--mono);
+      margin-top: 8px
+    }
+
+    .filt-stage .sval {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      font-family: var(--mono);
+      margin-top: 2px
+    }
+
+    /* ══════════════ TERMINAL ══════════════ */
+    .terminal {
+      background: #020608;
+      border: 1px solid rgba(0, 255, 160, 0.15);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 12px;
+      border-bottom: 1px solid rgba(0, 255, 160, 0.1);
+      background: #030a07;
+    }
+
+    .tdot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%
+    }
+
+    .tterm-title {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-left: 4px;
+      flex: 1
+    }
+
+    .term-log {
+      flex: 1;
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      overflow-y: auto;
+      max-height: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: linear-gradient(180deg, #020608 0%, #030b09 100%);
+    }
+
+    .term-log::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .term-log::-webkit-scrollbar-thumb {
+      background: rgba(0, 255, 160, 0.2)
+    }
+
+    .tline {
+      display: flex;
+      gap: 8px;
+      animation: logSlide 0.2s ease forwards;
+      opacity: 0
+    }
+
+    @keyframes logSlide {
+      to {
+        opacity: 1
+      }
+    }
+
+    .tts {
+      color: #1a3828
+    }
+
+    .tinfo {
+      color: var(--em)
+    }
+
+    .twarn {
+      color: var(--amber)
+    }
+
+    .terr {
+      color: var(--red)
+    }
+
+    .tmsg {
+      color: #4a8060
+    }
+
+    .tinput-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-top: 1px solid rgba(0, 255, 160, 0.1);
+      background: #030a07;
+    }
+
+    .tprompt {
+      color: var(--em);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700
+    }
+
+    .tinput {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--em);
+      font-family: var(--mono);
+      font-size: 11px;
+      outline: none;
+      caret-color: var(--em)
+    }
+
+    .tinput::placeholder {
+      color: #1a3828
+    }
+
+    /* ══════════════ CONTROL BUTTONS ══════════════ */
+    .ctrl-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 18px
+    }
+
+    .ctrl-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--bdr);
+      background: rgba(0, 255, 160, 0.02);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ctrl-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--em);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.2s;
+      z-index: 0;
+      opacity: 0.06;
+    }
+
+    .ctrl-btn:hover {
+      border-color: var(--bdr2);
+      transform: translateY(-2px)
+    }
+
+    .ctrl-btn:hover::before {
+      transform: scaleY(1)
+    }
+
+    .ctrl-btn:active {
+      transform: scale(0.97)
+    }
+
+    .ctrl-btn .cicon {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1
+    }
+
+    .ctrl-btn .cicon svg {
+      width: 20px;
+      height: 20px
+    }
+
+    .ctrl-btn .cname {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text);
+      z-index: 1
+    }
+
+    .ctrl-btn .cstatus {
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-family: var(--mono);
+      z-index: 1
+    }
+
+    .ctrl-btn.cactive {
+      border-color: rgba(0, 255, 160, 0.4);
+      background: rgba(0, 255, 160, 0.06)
+    }
+
+    .ctrl-btn.cactive .cname {
+      color: var(--em)
+    }
+
+    .ctrl-btn.cdanger {
+      border-color: rgba(255, 64, 96, 0.3)
+    }
+
+    .ctrl-btn.cdanger:hover {
+      border-color: var(--red)
+    }
+
+    .ctrl-btn.cdanger .cname {
+      color: var(--red)
+    }
+
+    /* ══════════════ ROBOT CARDS ══════════════ */
+    .robot-card {
+      background: var(--card);
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .robot-card:hover {
+      border-color: var(--bdr2);
+      transform: translateY(-2px)
+    }
+
+    .robot-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      border-radius: 2px 0 0 2px
+    }
+
+    .robot-card.ground::before {
+      background: linear-gradient(180deg, var(--em), var(--em2))
+    }
+
+    .robot-card.aqua::before {
+      background: linear-gradient(180deg, var(--blue), var(--cyan))
+    }
+
+    .robot-card.base::before {
+      background: linear-gradient(180deg, var(--amber), #ff8800)
+    }
+
+    .rc-type {
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+      font-family: var(--mono)
+    }
+
+    .rc-id {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      font-family: var(--mono);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px
+    }
+
+    .rc-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--bdr);
+      font-family: var(--mono);
+      font-size: 10px
+    }
+
+    .rc-row:last-child {
+      border: none
+    }
+
+    .rc-label {
+      color: var(--muted)
+    }
+
+    .rc-val {
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .sparkline {
+      opacity: 0.8;
+      display: block;
+      margin: 8px 0
+    }
+
+    /* ══════════════ ALERTS ══════════════ */
+    .aitem {
+      padding: 9px 11px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      border: 1px solid var(--bdr);
+      background: var(--faint);
+      cursor: pointer;
+      transition: all 0.15s;
+      animation: alertIn 0.3s ease forwards;
+    }
+
+    @keyframes alertIn {
+      from {
+        opacity: 0;
+        transform: translateX(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .aitem:hover {
+      border-color: var(--bdr2)
+    }
+
+    .aitem.critical {
+      border-left: 3px solid var(--red)
+    }
+
+    .aitem.moderate {
+      border-left: 3px solid var(--amber)
+    }
+
+    .atop {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px
+    }
+
+    .asev {
+      font-size: 10px;
+      font-weight: 700;
+      font-family: var(--mono)
+    }
+
+    .asev.critical {
+      color: var(--red)
+    }
+
+    .asev.moderate {
+      color: var(--amber)
+    }
+
+    .ats {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono)
+    }
+
+    .atype {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.05em
+    }
+
+    .arobot {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono)
+    }
+
+    /* ══════════════ DISTRIBUTION ══════════════ */
+    .drow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--bdr)
+    }
+
+    .drow:last-child {
+      border: none
+    }
+
+    .dhome {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      min-width: 110px
+    }
+
+    .dbar-wrap {
+      flex: 1;
+      height: 3px;
+      background: rgba(176, 96, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden
+    }
+
+    .dbar {
+      height: 100%;
+      background: var(--purple);
+      border-radius: 2px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1)
+    }
+
+    .dlpm {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--purple);
+      font-family: var(--mono);
+      min-width: 58px;
+      text-align: right
+    }
+
+    /* ══════════════ ASAASE TABS ══════════════ */
+    .tab-bar {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: var(--bg3);
+      border-radius: 4px;
+      border: 1px solid var(--bdr)
+    }
+
+    .tabbtn {
+      padding: 6px 14px;
+      border-radius: 3px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tabbtn:hover {
+      color: var(--text)
+    }
+
+    .tabbtn.active {
+      background: rgba(0, 255, 160, 0.12);
+      color: var(--em)
+    }
+
+    /* Lang bar */
+    .lang-bar {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: var(--bg3);
+      border-radius: 4px;
+      border: 1px solid var(--bdr)
+    }
+
+    .lbtn {
+      padding: 4px 8px;
+      border-radius: 3px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .lbtn:hover {
+      color: var(--text)
+    }
+
+    .lbtn.active {
+      background: rgba(0, 255, 160, 0.1);
+      color: var(--em)
+    }
+
+    /* ══════════════ CAMERA FEEDS ══════════════ */
+    .camfeed {
+      background: #000;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 16/9;
+      border: 1px solid var(--bdr);
+    }
+
+    .camfeed .clabel {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--bdr);
+      border-radius: 3px;
+      padding: 3px 9px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text);
+      font-family: var(--mono);
+      letter-spacing: 0.12em;
+      z-index: 1;
+    }
+
+    .camfeed .cstatus {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 1
+    }
+
+    .camfeed .coverlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #0a1810 0%, #020508 100%);
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cscanline {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--em), transparent);
+      animation: cscan 4s linear infinite;
+      opacity: 0;
+    }
+
+    .camfeed.online .cscanline {
+      opacity: 0.4
+    }
+
+    @keyframes cscan {
+      0% {
+        top: 0
+      }
+
+      100% {
+        top: 100%
+      }
+    }
+
+    .cam-tel {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      gap: 5px;
+      z-index: 1
+    }
+
+    .ctel-chip {
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--bdr);
+      border-radius: 3px;
+      padding: 2px 7px;
+      font-size: 8px;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+
+    /* ══════════════ MISSION MAP ══════════════ */
+    .mmap {
+      background: radial-gradient(ellipse at center, #071408 0%, #030b05 100%);
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      height: 300px;
+      cursor: crosshair;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mgrid {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(0, 255, 160, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 160, 0.06) 1px, transparent 1px);
+      background-size: 25px 25px;
+    }
+
+    /* Sweep animation */
+    .msweep {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 0;
+      overflow: visible;
+    }
+
+    .msweep::before {
+      content: '';
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      top: -150px;
+      left: 0;
+      transform-origin: 0 150px;
+      background: conic-gradient(from 0deg, transparent 340deg, rgba(0, 255, 160, 0.3) 360deg);
+      animation: sweep 3s linear infinite;
+    }
+
+    @keyframes sweep {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* Map dot */
+    .mdot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      transition: left 0.6s ease, top 0.6s ease;
+    }
+
+    .mdot::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      animation: dotPing 2s ease-out infinite;
+      opacity: 0;
+    }
+
+    @keyframes dotPing {
+      0% {
+        transform: scale(0.5);
+        opacity: 0.8
+      }
+
+      100% {
+        transform: scale(1.8);
+        opacity: 0
+      }
+    }
+
+    .wp-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 9px;
+      background: var(--faint);
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
+      margin-bottom: 4px
+    }
+
+    .wpnum {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0, 255, 160, 0.1);
+      color: var(--em);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      flex-shrink: 0
+    }
+
+    .wpdel {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 3px;
+      font-size: 12px;
+      transition: color 0.15s
+    }
+
+    .wpdel:hover {
+      color: var(--red)
+    }
+
+    /* ══════════════ MODAL ══════════════ */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-bg.hidden {
+      display: none
+    }
+
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--bdr2);
+      border-radius: 4px;
+      padding: 36px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 0 60px rgba(0, 255, 160, 0.1);
+      text-align: center;
+      animation: viewIn 0.25s ease;
+    }
+
+    .modal-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 0 auto 18px;
+      background: rgba(255, 64, 96, 0.08);
+      border: 1px solid rgba(255, 64, 96, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--red)
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px
+    }
+
+    .modal-body {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 26px
+    }
+
+    .modal-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    .mbtn {
+      padding: 11px;
+      border-radius: 4px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mbtn-cancel {
+      background: var(--faint);
+      border: 1px solid var(--bdr);
+      color: var(--text)
+    }
+
+    .mbtn-cancel:hover {
+      border-color: var(--bdr2)
+    }
+
+    .mbtn-confirm {
+      background: rgba(0, 255, 160, 0.1);
+      border: 1px solid rgba(0, 255, 160, 0.4);
+      color: var(--em)
+    }
+
+    .mbtn-confirm:hover {
+      background: var(--em);
+      color: #000
+    }
+
+    /* ══════════════ TOASTS ══════════════ */
+    #toasts {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      pointer-events: none
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 14px;
+      border-radius: 4px;
+      border: 1px solid;
+      backdrop-filter: blur(12px);
+      min-width: 240px;
+      max-width: 340px;
+      pointer-events: all;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font);
+      animation: toastIn 0.25s ease;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(16px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .toast.success {
+      background: rgba(0, 255, 160, 0.1);
+      border-color: rgba(0, 255, 160, 0.3);
+      color: #80ffcc
+    }
+
+    .toast.error {
+      background: rgba(255, 64, 96, 0.1);
+      border-color: rgba(255, 64, 96, 0.3);
+      color: #ff9090
+    }
+
+    .toast.info {
+      background: rgba(0, 180, 255, 0.1);
+      border-color: rgba(0, 180, 255, 0.3);
+      color: #80ddff
+    }
+
+    .toast.warning {
+      background: rgba(255, 170, 0, 0.1);
+      border-color: rgba(255, 170, 0, 0.3);
+      color: #ffd080
+    }
+
+    /* ══════════════ MISC ══════════════ */
+    .sep {
+      height: 1px;
+      background: var(--bdr);
+      margin: 16px 0
+    }
+
+    .rr {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .rb {
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .mono {
+      font-family: var(--mono)
+    }
+
+    .cem-c {
+      color: var(--em)
+    }
+
+    .cbl-c {
+      color: var(--blue)
+    }
+
+    .camb-c {
+      color: var(--amber)
+    }
+
+    .crd-c {
+      color: var(--red)
+    }
+
+    .cmut-c {
+      color: var(--muted)
+    }
+
+    .mt12 {
+      margin-top: 12px
+    }
+
+    .mt16 {
+      margin-top: 16px
+    }
+
+    .small {
+      font-size: 11px
+    }
+
+    .spin {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 255, 160, 0.1);
+      border-top-color: var(--em);
+      animation: spin 0.7s linear infinite;
+      margin: 32px auto
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .loading-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 160px;
+      gap: 10px
+    }
+
+    .loading-block p {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      animation: blink 1.5s ease infinite
+    }
+
+    .scroll-y {
+      overflow-y: auto
+    }
+
+    .scroll-y::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .scroll-y::-webkit-scrollbar-thumb {
+      background: var(--bdr2)
+    }
+
+    /* Number counter animation */
+    .count-up {
+      animation: countAnim 0.5s ease
+    }
+
+    @keyframes countAnim {
+      from {
+        opacity: 0;
+        transform: translateY(4px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* ══════════════ STAT CARD GLOW ON UPDATE ══════════════ */
+    .card-flash {
+      animation: cardFlash 0.4s ease
+    }
+
+    @keyframes cardFlash {
+
+      0%,
+      100% {
+        border-color: var(--bdr)
+      }
+
+      50% {
+        border-color: rgba(0, 255, 160, 0.4);
+        box-shadow: 0 0 12px rgba(0, 255, 160, 0.1)
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div id="view-login">
+    <div class="login-outer">
+      <div class="login-card">
+        <div class="login-head">
+          <div class="login-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <h1>ECOGUARD<span>HQ</span></h1>
+          <p>SECURE SYSTEM ACCESS</p>
+        </div>
+        <div id="lerr" class="login-err"></div>
+        <div class="fgroup">
+          <label>Username</label>
+          <div class="finput-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <input type="text" id="inp-user" placeholder="admin" value="admin">
+          </div>
+        </div>
+        <div class="fgroup">
+          <label>Password</label>
+          <div class="finput-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <input type="password" id="inp-pass" placeholder="••••••••">
+          </div>
+        </div>
+        <button class="btn-login" id="login-btn">Access System</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" style="display:none">
+    <div id="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg></div>
+        <div class="sb-logo-text">
+          <div class="sb-logo-name">ECOGUARD<span>HQ</span></div>
+          <div class="sb-logo-sub">Tactical Hub</div>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-view="overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          <span class="nb-label">Overview</span>
+        </button>
+        <button class="nav-btn" data-view="environmental">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 22L8 16M15 9a5 5 0 0 1-5 5m0 0L2 22m8-8L22 2M15 9c0 0-3-3-7 0" />
+          </svg>
+          <span class="nb-label">Environmental</span>
+        </button>
+        <button class="nav-btn" data-view="water">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+          </svg>
+          <span class="nb-label">Water Infra</span>
+        </button>
+        <button class="nav-btn" data-view="energy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          <span class="nb-label">Energy Hub</span>
+        </button>
+        <button class="nav-btn" data-view="control">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M5.93 4.93a10 10 0 0 0 0 14.14" />
+          </svg>
+          <span class="nb-label">Control Center</span>
+        </button>
+        <button class="nav-btn" data-view="asaase">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="10" rx="2" />
+            <circle cx="12" cy="5" r="2" />
+            <path d="M12 7v4M8 11v2M16 11v2" />
+          </svg>
+          <span class="nb-label">ASAASE Robots</span>
+        </button>
+      </nav>
+      <div class="sb-bottom">
+        <button class="sb-action" id="theme-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+          </svg>
+        </button>
+        <button class="sb-action logout" id="logout-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          <span class="sb-action-txt">Logout</span>
+        </button>
+      </div>
+    </div>
+    <button id="collapse-btn" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </button>
+
+    <div id="main">
+
+      <!-- ══ OVERVIEW ══ -->
+      <div id="view-overview" class="view active">
+        <div class="ph">
+          <div class="ph-left">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>System Overview</h2>
+            <p>Live Intelligence Snapshot</p>
+          </div>
+          <div class="ph-right">
+            <div id="health-badge" class="h-badge cem">
+              <div class="live-dot"></div><span id="health-text">-- HEALTH</span>
+            </div>
+            <div class="live-badge">
+              <div class="live-dot"></div>LIVE
+            </div>
+          </div>
+        </div>
+
+        <div class="g4">
+          <div class="card scard" id="sc-tree">
+            <div class="scard-icon ic-em"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 22L8 16M15 9a5 5 0 0 1-5 5m0 0L2 22m8-8L22 2M15 9c0 0-3-3-7 0" />
+              </svg></div>
+            <div class="scard-label">Tree Cover</div>
+            <div class="scard-val"><span id="s-treepct">--</span><span class="unit">%</span></div>
+            <div class="scard-trend cem-c mono" id="s-treetrend">—</div>
+          </div>
+          <div class="card scard" id="sc-power">
+            <div class="scard-icon ic-amb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg></div>
+            <div class="scard-label">Current Power</div>
+            <div class="scard-val"><span id="s-power">--</span><span class="unit">W</span></div>
+          </div>
+          <div class="card scard" id="sc-energy">
+            <div class="scard-icon ic-pur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg></div>
+            <div class="scard-label">Energy Today</div>
+            <div class="scard-val"><span id="s-energy">--</span><span class="unit">kWh</span></div>
+          </div>
+          <div class="card scard" id="sc-state">
+            <div class="scard-icon ic-blu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+              </svg></div>
+            <div class="scard-label">System State</div>
+            <div class="scard-val" style="font-size:16px;letter-spacing:0"><span id="s-state">--</span></div>
+          </div>
+        </div>
+
+        <div class="g-main">
+          <div>
+            <div class="card ccrd">
+              <div class="ccrd-head">
+                <div class="htitle"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>Turbine Power Generation</div>
+              </div>
+              <canvas id="chart-power" height="160"></canvas>
+            </div>
+            <div class="card ccrd mt12">
+              <div class="ccrd-head">
+                <div class="htitle"><svg viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2">
+                    <path d="M2 22L8 16M15 9a5 5 0 0 1-5 5" />
+                  </svg>Environmental Trends</div>
+              </div>
+              <canvas id="chart-env" height="120"></canvas>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div style="padding:16px 18px 4px">
+                <div class="stitle">Water Quality</div>
+              </div>
+              <div class="gauge-wrap">
+                <div class="gauge-title">pH Level</div>
+                <div class="gauge-svg-wrap">
+                  <svg width="180" height="100" viewBox="0 0 180 100">
+                    <path d="M20 90 A70 70 0 0 1 160 90" fill="none" stroke="rgba(0,180,255,0.1)" stroke-width="12"
+                      stroke-linecap="round" />
+                    <path id="gauge-ph-arc" d="M20 90 A70 70 0 0 1 160 90" fill="none" stroke="var(--blue)"
+                      stroke-width="12" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="110"
+                      style="filter:drop-shadow(0 0 4px var(--blue))" />
+                  </svg>
+                  <div class="gauge-val"><span id="gauge-ph-val">7.0</span></div>
+                </div>
+                <div class="gauge-range"><span>0</span><span>14</span></div>
+              </div>
+              <div class="gauge-wrap" style="padding-top:0">
+                <div class="gauge-title">Turbidity</div>
+                <div class="gauge-svg-wrap">
+                  <svg width="180" height="100" viewBox="0 0 180 100">
+                    <path d="M20 90 A70 70 0 0 1 160 90" fill="none" stroke="rgba(255,170,0,0.1)" stroke-width="12"
+                      stroke-linecap="round" />
+                    <path id="gauge-turb-arc" d="M20 90 A70 70 0 0 1 160 90" fill="none" stroke="var(--amber)"
+                      stroke-width="12" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="198"
+                      style="filter:drop-shadow(0 0 4px var(--amber))" />
+                  </svg>
+                  <div class="gauge-val"><span id="gauge-turb-val">0</span><span
+                      style="font-size:11px;color:var(--muted)"> NTU</span></div>
+                </div>
+                <div class="gauge-range"><span>0</span><span>10 NTU</span></div>
+              </div>
+              <div style="padding:0 18px 14px;display:flex;justify-content:space-between;align-items:center">
+                <span class="small cmut-c mono">Temperature</span>
+                <span class="mono cem-c" style="font-weight:700" id="s-temp">--°C</span>
+              </div>
+            </div>
+            <div class="card mt12" style="padding:16px 18px">
+              <div class="stitle">Distribution Grid</div>
+              <div id="dist-rows">
+                <div class="loading-block">
+                  <div class="spin"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ENVIRONMENTAL ══ -->
+      <div id="view-environmental" class="view">
+        <div class="ph">
+          <div class="ph-left">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2">
+                <path d="M2 22L8 16M15 9a5 5 0 0 1-5 5m0 0L2 22m8-8L22 2M15 9c0 0-3-3-7 0" />
+              </svg>Environmental Intelligence</h2>
+            <p>Computer Vision &amp; Satellite Analysis</p>
+          </div>
+        </div>
+        <div class="g2" style="margin-bottom:16px">
+          <div class="card" style="padding:18px">
+            <div class="stitle" style="color:var(--em);border-color:rgba(0,255,160,0.15)">Site Statistics</div>
+            <div class="rb" style="margin-bottom:10px"><span class="small cmut-c">Cover Ratio</span><span
+                style="font-size:24px;font-weight:700;color:#fff;font-family:var(--mono)" id="env-ratio">--%</span>
+            </div>
+            <div class="rb" style="margin-bottom:12px"><span class="small cmut-c mono">Deviation</span><span
+                class="mono small" id="env-dev" style="font-weight:700;color:var(--em)">0.00%</span></div>
+            <div style="height:4px;background:rgba(0,255,160,0.08);border-radius:2px;overflow:hidden">
+              <div id="env-bar"
+                style="height:100%;background:linear-gradient(90deg,var(--em),var(--cyan));border-radius:2px;width:0%;transition:width 0.8s ease;filter:drop-shadow(0 0 4px var(--em))">
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:18px">
+            <div class="stitle" style="color:var(--amber);border-color:rgba(255,170,0,0.15)">Anomalies Detected</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div
+                style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr)">
+                <span class="small cmut-c">Excavation Hits</span><span class="chip camb" id="env-exc">0</span>
+              </div>
+              <div
+                style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr)">
+                <span class="small cmut-c">Movement Alerts</span><span class="chip cblu" id="env-act">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card ccrd">
+          <div class="ccrd-head">
+            <div class="htitle"><svg viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2">
+                <path d="M2 22L8 16" />
+              </svg>Historical Canopy Performance</div>
+          </div>
+          <canvas id="chart-env2" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- ══ WATER ══ -->
+      <div id="view-water" class="view">
+        <div class="ph">
+          <div class="ph-left">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+              </svg>Water Infrastructure</h2>
+            <p>Purification &amp; Distribution Network</p>
+          </div>
+        </div>
+        <!-- Filtration -->
+        <div class="card" style="padding:20px;margin-bottom:16px">
+          <div class="rb" style="margin-bottom:18px">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px"><svg
+                  viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" style="width:16px;height:16px">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                </svg>Multi-Stage Filtration</div>
+              <div class="small cmut-c mono" style="margin-top:3px">Mechanical Pipeline Status</div>
+            </div>
+            <span class="chip cem" id="filt-state-badge">FILTERING</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center">
+            <!-- Basin -->
+            <div class="filt-stage">
+              <div
+                style="width:76px;height:104px;background:var(--faint);border-radius:0 0 10px 10px;border:1px solid var(--bdr);margin:0 auto;position:relative;overflow:hidden">
+                <div id="filt-water"
+                  style="position:absolute;bottom:0;left:0;width:100%;height:60%;background:linear-gradient(180deg,rgba(0,180,255,0.2),rgba(0,180,255,0.5));transition:height 0.8s ease">
+                </div>
+                <div id="filt-debris"></div>
+              </div>
+              <div class="slabel">Basin Intake</div>
+              <div class="sval" id="filt-net">--% Load</div>
+            </div>
+            <div>
+              <div class="pipe-track">
+                <div class="pipe-flow" id="pipe-flow1"></div>
+              </div>
+            </div>
+            <!-- Filter -->
+            <div class="filt-stage">
+              <div
+                style="width:60px;height:116px;background:var(--faint);border-radius:30px;border:1px solid var(--bdr);margin:0 auto;position:relative;overflow:hidden">
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+                  <div style="flex:1;background:rgba(255,170,0,0.12);border-bottom:1px solid rgba(255,255,255,0.04)">
+                  </div>
+                  <div style="flex:1;background:rgba(255,170,0,0.08);border-bottom:1px solid rgba(255,255,255,0.04)">
+                  </div>
+                  <div style="flex:1;background:rgba(255,170,0,0.05);border-bottom:1px solid rgba(255,255,255,0.04)">
+                  </div>
+                  <div style="flex:1;background:rgba(10,20,15,0.9)"></div>
+                </div>
+                <div id="filt-clog-overlay"
+                  style="position:absolute;inset:0;background:rgba(255,170,0,0.3);opacity:0.5;transition:opacity 0.8s">
+                </div>
+              </div>
+              <div class="slabel">Filter Tube</div>
+              <div class="sval" id="filt-clog">--% Clog</div>
+            </div>
+            <div>
+              <div class="pipe-track">
+                <div class="pipe-flow" id="pipe-flow2"></div>
+              </div>
+            </div>
+            <!-- Turbine -->
+            <div class="filt-stage">
+              <div
+                style="width:76px;height:76px;border-radius:50%;background:var(--faint);border:2px solid var(--bdr);margin:0 auto;display:flex;align-items:center;justify-content:center;position:relative">
+                <svg id="filt-turbine" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"
+                  style="width:36px;height:36px;filter:drop-shadow(0 0 6px var(--blue))">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+                <div
+                  style="position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(0,180,255,0.2);animation:turbRing 2s ease infinite">
+                </div>
+              </div>
+              <div class="slabel">Hydro Stage</div>
+              <div class="sval" id="filt-flow">-- LPM</div>
+            </div>
+          </div>
+          <style>
+            @keyframes turbRing {
+
+              0%,
+              100% {
+                transform: scale(1);
+                opacity: 0.5
+              }
+
+              50% {
+                transform: scale(1.2);
+                opacity: 0
+              }
+            }
+          </style>
+          <div class="g2" style="margin-top:16px;gap:10px">
+            <div
+              style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr)">
+              <div class="scard-icon ic-blu" style="margin:0;width:28px;height:28px;border-radius:6px"><svg
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                </svg></div>
+              <div>
+                <div
+                  style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.15em">
+                  System Flow</div>
+                <div class="small mono" id="pump-status" style="font-weight:700">OFFLINE</div>
+              </div>
+            </div>
+            <div
+              style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr)">
+              <div class="scard-icon ic-amb" style="margin:0;width:28px;height:28px;border-radius:6px"><svg
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                  <path
+                    d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" />
+                </svg></div>
+              <div>
+                <div
+                  style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.15em">
+                  Maintenance</div>
+                <div class="small mono" id="maint-status" style="font-weight:700">STABLE</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="card" style="padding:18px">
+            <div class="stitle">Chemical Integrity</div>
+            <div style="margin-bottom:16px">
+              <div
+                style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.18em;margin-bottom:6px">
+                pH Balance</div>
+              <div style="position:relative;display:inline-block">
+                <svg width="180" height="100" viewBox="0 0 180 100">
+                  <path d="M20 90 A70 70 0 0 1 160 90" fill="none" stroke="rgba(0,180,255,0.1)" stroke-width="12"
+                    stroke-linecap="round" />
+                  <path id="w-ph-arc" d="M20 90 A70 70 0 0 1 160 90" fill="none" stroke="var(--blue)" stroke-width="12"
+                    stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="110"
+                    style="filter:drop-shadow(0 0 4px var(--blue))" />
+                </svg>
+                <div class="gauge-val"><span id="w-ph">7.0</span></div>
+              </div>
+              <div class="gauge-range"><span>0</span><span>14</span></div>
+            </div>
+            <div class="g2" style="gap:10px">
+              <div style="padding:10px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr)">
+                <div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:3px">Temperature
+                </div>
+                <div class="mono" id="w-temp" style="font-weight:700">--°C</div>
+              </div>
+              <div style="padding:10px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr)">
+                <div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:3px">Turbidity</div>
+                <div class="mono" id="w-turb" style="font-weight:700">-- NTU</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:18px">
+            <div class="stitle">Automation Logs</div>
+            <div class="scroll-y"
+              style="max-height:230px;display:flex;flex-direction:column;gap:5px;font-family:var(--mono);font-size:10px">
+              <div
+                style="padding:7px 9px;background:rgba(0,255,160,0.06);border:1px solid rgba(0,255,160,0.15);border-radius:4px;color:#80ffaa">
+                [00:42:11] SYSTEM: Backwash cycle completed.</div>
+              <div
+                style="padding:7px 9px;background:rgba(0,180,255,0.06);border:1px solid rgba(0,180,255,0.15);border-radius:4px;color:#80ccff">
+                [00:42:08] INTAKE: Net debris below threshold.</div>
+              <div
+                style="padding:7px 9px;background:var(--faint);border:1px solid var(--bdr);border-radius:4px;color:var(--muted)">
+                [00:41:55] FLOW: Intake at 45.2 LPM.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ENERGY ══ -->
+      <div id="view-energy" class="view">
+        <div class="ph">
+          <div class="ph-left">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>Energy Analytics Hub</h2>
+            <p>Hydro-Electric Generation &amp; Efficiency Monitoring</p>
+          </div>
+        </div>
+        <div class="g4" style="margin-bottom:16px">
+          <div class="card scard">
+            <div class="scard-icon ic-amb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" />
+                <rect x="9" y="9" width="6" height="6" />
+              </svg></div>
+            <div class="scard-label">Avg Power</div>
+            <div class="scard-val"><span id="e-avgpow">--</span><span class="unit">W</span></div>
+          </div>
+          <div class="card scard">
+            <div class="scard-icon ic-blu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg></div>
+            <div class="scard-label">Energy Gen</div>
+            <div class="scard-val"><span id="e-kwh">--</span><span class="unit">kWh</span></div>
+          </div>
+          <div class="card scard">
+            <div class="scard-icon ic-em"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg></div>
+            <div class="scard-label">Est. Savings</div>
+            <div class="scard-val"><span id="e-savings">--</span></div>
+          </div>
+          <div class="card scard">
+            <div class="scard-icon ic-pur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg></div>
+            <div class="scard-label">Uptime</div>
+            <div class="scard-val"><span>99.8</span><span class="unit">%</span></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+          <div class="card ccrd">
+            <div class="ccrd-head">
+              <div class="htitle"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                </svg>Generation Trends</div>
+              <span class="chip camb">LIVE</span>
+            </div>
+            <canvas id="chart-energy" height="220"></canvas>
+          </div>
+          <div class="card" style="padding:20px;display:flex;flex-direction:column">
+            <div
+              style="font-size:13px;font-weight:700;color:#fff;margin-bottom:18px;display:flex;align-items:center;gap:8px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2" style="width:15px;height:15px">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>Efficiency Status</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div style="position:relative;width:150px;height:150px;margin-bottom:18px">
+                <svg width="150" height="150" viewBox="0 0 150 150" style="transform:rotate(-90deg)">
+                  <circle cx="75" cy="75" r="62" fill="none" stroke="rgba(0,255,160,0.06)" stroke-width="10" />
+                  <circle id="eff-ring" cx="75" cy="75" r="62" fill="none" stroke="var(--em)" stroke-width="10"
+                    stroke-linecap="round" stroke-dasharray="390" stroke-dashoffset="390"
+                    style="filter:drop-shadow(0 0 6px var(--em));transition:stroke-dashoffset 0.8s ease" />
+                </svg>
+                <div
+                  style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <span style="font-size:30px;font-weight:700;color:#fff;font-family:var(--mono);line-height:1"
+                    id="eff-score">--</span>
+                  <span class="small cmut-c mono" style="margin-top:2px">Efficiency</span>
+                </div>
+              </div>
+              <div style="width:100%;display:flex;flex-direction:column;gap:7px">
+                <div class="rb small mono"><span class="cmut-c">Turbine RPM</span><span id="e-rpm">--</span></div>
+                <div class="rb small mono"><span class="cmut-c">Flow/Power</span><span class="cem-c">OPTIMAL</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONTROL ══ -->
+      <div id="view-control" class="view">
+        <div class="ph">
+          <div class="ph-left">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M5.93 4.93a10 10 0 0 0 0 14.14" />
+              </svg>System Management Center</h2>
+            <p>Mission Critical Overrides &amp; Calibration</p>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div
+              style="padding:16px 18px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px"><svg
+                  viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2" style="width:15px;height:15px">
+                  <rect x="4" y="4" width="16" height="16" />
+                </svg>Hardware Actuators</div>
+              <span class="chip cem">Local Network</span>
+            </div>
+            <div class="ctrl-grid">
+              <button class="ctrl-btn" id="ctrl-netclear" onclick="handleControl('Net Clear','net-clear')">
+                <div class="cicon ic-em"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10" />
+                    <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+                  </svg></div>
+                <div class="cname">Net Clear</div>
+                <div class="cstatus">IDLE</div>
+              </button>
+              <button class="ctrl-btn" id="ctrl-backwash" onclick="handleControl('Backwash','backwash')">
+                <div class="cicon ic-blu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg></div>
+                <div class="cname">Backwash</div>
+                <div class="cstatus">IDLE</div>
+              </button>
+              <button class="ctrl-btn cdanger" onclick="handleControl('System Reset','reset')">
+                <div class="cicon ic-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg></div>
+                <div class="cname">System Reset</div>
+                <div class="cstatus" style="color:var(--red)">DANGER</div>
+              </button>
+            </div>
+          </div>
+          <div class="terminal" style="min-height:300px">
+            <div class="term-bar">
+              <div class="tdot" style="background:#ff4060;opacity:0.6"></div>
+              <div class="tdot" style="background:#ffaa00;opacity:0.6"></div>
+              <div class="tdot" style="background:#00ffa0;opacity:0.6"></div>
+              <div class="tterm-title">Command Terminal</div>
+            </div>
+            <div class="term-log" id="term-log">
+              <div class="tline"><span class="tts">[--:--:--]</span><span class="tinfo">INFO:</span><span
+                  class="tmsg">System Kernel initialized. All modules reporting.</span></div>
+              <div class="tline"><span class="tts">[--:--:--]</span><span class="tinfo">INFO:</span><span
+                  class="tmsg">Authenticated as ROOT — Permission Level 10</span></div>
+            </div>
+            <div class="tinput-row">
+              <span class="tprompt">$</span>
+              <input class="tinput" id="term-input" placeholder="Awaiting command..."
+                onkeydown="handleTermInput(event)">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ASAASE ══ -->
+      <div id="view-asaase" class="view">
+        <div class="ph">
+          <div class="ph-left">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2">
+                <rect x="3" y="11" width="18" height="10" rx="2" />
+                <circle cx="12" cy="5" r="2" />
+                <path d="M12 7v4M8 11v2M16 11v2" />
+              </svg>ASAASE Robots</h2>
+            <p>Autonomous Environmental Monitoring Fleet</p>
+          </div>
+          <div class="ph-right" style="gap:8px">
+            <div class="lang-bar">
+              <button class="lbtn active" data-lang="EN">EN</button>
+              <button class="lbtn" data-lang="TW">TW</button>
+              <button class="lbtn" data-lang="GA">GA</button>
+              <button class="lbtn" data-lang="EW">EW</button>
+              <button class="lbtn" data-lang="FR">FR</button>
+            </div>
+            <div class="tab-bar">
+              <button class="tabbtn active" data-tab="overview">Overview</button>
+              <button class="tabbtn" data-tab="mission">Mission</button>
+              <button class="tabbtn" data-tab="intel">Intel</button>
+              <button class="tabbtn" data-tab="command">Command</button>
+              <button class="tabbtn" data-tab="live">Live</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overview -->
+        <div id="tab-overview" class="atab">
+          <div class="g3" style="margin-bottom:16px">
+            <div class="robot-card ground">
+              <div class="rb" style="margin-bottom:6px">
+                <div class="rc-type">Ground Rover</div><span class="chip cem" id="rc-gs">OFFLINE</span>
+              </div>
+              <div class="rc-id">ASA-GROUND-01</div>
+              <svg class="sparkline" width="100%" height="24" id="spark-g">
+                <polyline fill="none" stroke="var(--em)" stroke-width="1.5" points="" />
+              </svg>
+              <div class="rc-row"><span class="rc-label">Battery</span><span class="rc-val" id="rc-gbatt">--%</span>
+              </div>
+              <div class="rc-row"><span class="rc-label">GPS</span><span class="rc-val mono" style="font-size:9px"
+                  id="rc-ggps">---</span></div>
+              <div class="rc-row"><span class="rc-label">Last Seen</span><span class="rc-val" id="rc-gseen">---</span>
+              </div>
+              <div class="rc-row"><span class="rc-label">Soil Class</span><span class="rc-val" id="rc-gclass">---</span>
+              </div>
+            </div>
+            <div class="robot-card aqua">
+              <div class="rb" style="margin-bottom:6px">
+                <div class="rc-type">Aqua Scout</div><span class="chip cblu" id="rc-as">OFFLINE</span>
+              </div>
+              <div class="rc-id">ASA-AQUA-07</div>
+              <svg class="sparkline" width="100%" height="24" id="spark-a">
+                <polyline fill="none" stroke="var(--blue)" stroke-width="1.5" points="" />
+              </svg>
+              <div class="rc-row"><span class="rc-label">Battery</span><span class="rc-val" id="rc-abatt">--%</span>
+              </div>
+              <div class="rc-row"><span class="rc-label">GPS</span><span class="rc-val mono" style="font-size:9px"
+                  id="rc-agps">---</span></div>
+              <div class="rc-row"><span class="rc-label">Last Seen</span><span class="rc-val" id="rc-aseen">---</span>
+              </div>
+              <div class="rc-row"><span class="rc-label">Verdict</span><span class="rc-val" id="rc-averdict">---</span>
+              </div>
+            </div>
+            <div class="robot-card base">
+              <div class="rb" style="margin-bottom:6px">
+                <div class="rc-type">Base Hub</div><span class="chip cem">ONLINE</span>
+              </div>
+              <div class="rc-id">ASA-BASE-ALPHA</div>
+              <svg class="sparkline" width="100%" height="24" id="spark-b">
+                <polyline fill="none" stroke="var(--amber)" stroke-width="1.5" points="" />
+              </svg>
+              <div class="rc-row"><span class="rc-label">Battery</span><span class="rc-val">100%</span></div>
+              <div class="rc-row"><span class="rc-label">GPS</span><span class="rc-val mono"
+                  style="font-size:9px">5.6037, -0.1870</span></div>
+              <div class="rc-row"><span class="rc-label">Signal</span><span class="rc-val cem-c">LOCKED</span></div>
+              <div class="rc-row"><span class="rc-label">Mode</span><span class="rc-val">AUTO</span></div>
+            </div>
+          </div>
+          <div class="g4">
+            <div class="card scard">
+              <div class="scard-icon ic-amb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                </svg></div>
+              <div class="scard-label">Alerts 24h</div>
+              <div class="scard-val"><span id="a-count">--</span></div>
+            </div>
+            <div class="card scard">
+              <div class="scard-icon ic-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg></div>
+              <div class="scard-label">Critical 24h</div>
+              <div class="scard-val"><span id="a-crit">--</span></div>
+            </div>
+            <div class="card scard">
+              <div class="scard-icon ic-em"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="7" width="7" height="7" />
+                  <rect x="14" y="7" width="7" height="7" />
+                </svg></div>
+              <div class="scard-label">Avg Battery</div>
+              <div class="scard-val"><span id="a-batt">--</span><span class="unit">%</span></div>
+            </div>
+            <div class="card scard">
+              <div class="scard-icon ic-blu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                  <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                  <circle cx="12" cy="20" r="1" />
+                </svg></div>
+              <div class="scard-label">Network</div>
+              <div class="scard-val"><span>94</span><span class="unit">%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mission -->
+        <div id="tab-mission" class="atab" style="display:none">
+          <div class="g2">
+            <div>
+              <div class="card" style="padding:16px;margin-bottom:14px">
+                <div class="stitle" style="color:var(--em);border-color:rgba(0,255,160,0.15)">Live Coordination Map
+                </div>
+                <div class="mmap" id="mission-map" onclick="mapClick(event)">
+                  <div class="mgrid"></div>
+                  <div class="msweep"></div>
+                  <div id="map-gd" class="mdot" style="background:var(--em);color:var(--em);left:50%;top:60%"></div>
+                  <div id="map-ad" class="mdot" style="background:var(--blue);color:var(--blue);left:40%;top:40%"></div>
+                  <div id="wp-dots"></div>
+                  <div
+                    style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted);font-family:var(--mono);text-align:center">
+                    Click to place waypoints · Live robot positions</div>
+                </div>
+                <div class="rb mt12" style="font-family:var(--mono);font-size:10px">
+                  <span class="cmut-c">ROVER: <span class="cem-c" id="m-glat">---</span>, <span class="cem-c"
+                      id="m-glon">---</span></span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="padding:16px;margin-bottom:14px">
+                <div class="stitle">Waypoint Master</div>
+                <select id="wp-robot"
+                  style="width:100%;background:var(--bg3);border:1px solid var(--bdr);border-radius:4px;padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;margin-bottom:10px">
+                  <option value="GROUND_01">GROUND_01</option>
+                  <option value="AQUA_01">AQUA_01</option>
+                </select>
+                <div id="wp-list" style="max-height:170px;overflow-y:auto;margin-bottom:10px">
+                  <div
+                    style="text-align:center;padding:20px;border:1px dashed var(--bdr);border-radius:4px;color:var(--muted);font-size:10px;font-family:var(--mono)">
+                    Click map to add waypoints</div>
+                </div>
+                <div class="g2" style="gap:8px">
+                  <button class="ctrl-btn" style="padding:10px" onclick="clearWaypoints()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:16px;height:16px">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                    </svg>
+                    <div class="cname" style="font-size:10px">Clear</div>
+                  </button>
+                  <button class="ctrl-btn cactive" style="padding:10px" onclick="uploadWaypoints()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:16px;height:16px">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    <div class="cname" style="font-size:10px">Upload</div>
+                  </button>
+                </div>
+              </div>
+              <div class="card" style="padding:16px">
+                <div class="stitle">Fleet Status</div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div
+                    style="padding:9px 11px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr);cursor:pointer"
+                    onclick="selectRobot('GROUND_01',null)">
+                    <div class="rb"><span class="small mono" style="font-weight:700">ASA-GROUND-01</span>
+                      <div style="width:6px;height:6px;border-radius:50%;background:var(--muted)" id="fd-g"></div>
+                    </div>
+                    <div class="rb mt12" style="margin-top:5px"><span class="small cmut-c mono">BATT: <span
+                          id="fd-gbatt">--%</span></span><span class="small mono" style="color:var(--blue)"
+                        id="fd-gsig">---</span></div>
+                  </div>
+                  <div
+                    style="padding:9px 11px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr);cursor:pointer"
+                    onclick="selectRobot('AQUA_01',null)">
+                    <div class="rb"><span class="small mono" style="font-weight:700">ASA-AQUA-07</span>
+                      <div style="width:6px;height:6px;border-radius:50%;background:var(--muted)" id="fd-a"></div>
+                    </div>
+                    <div class="rb mt12" style="margin-top:5px"><span class="small cmut-c mono">BATT: <span
+                          id="fd-abatt">--%</span></span><span class="small mono" style="color:var(--blue)"
+                        id="fd-asig">---</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Intel -->
+        <div id="tab-intel" class="atab" style="display:none">
+          <div class="g2">
+            <div class="card" style="padding:18px">
+              <div class="stitle" style="color:var(--amber);border-color:rgba(255,170,0,0.15)">Environment Telemetry
+              </div>
+              <div id="intel-rows"></div>
+            </div>
+            <div class="card" style="padding:18px">
+              <div class="stitle" style="color:var(--red);border-color:rgba(255,64,96,0.15)">Emergency Stream <span
+                  class="chip cred" style="float:right;margin-top:-2px">LIVE</span></div>
+              <div id="alert-list" class="scroll-y" style="max-height:280px">
+                <div class="loading-block">
+                  <div class="spin"></div>
+                </div>
+              </div>
+              <div class="rb" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)">
+                <button class="sb-action" id="prev-page" onclick="changePage(-1)" style="width:auto;padding:5px 12px"
+                  disabled>← Prev</button>
+                <span class="small mono cmut-c" id="page-label">Page 1</span>
+                <button class="sb-action" id="next-page" onclick="changePage(1)"
+                  style="width:auto;padding:5px 12px">Next →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Command -->
+        <div id="tab-command" class="atab" style="display:none">
+          <div class="g2">
+            <div class="card" style="padding:18px">
+              <div class="stitle">Unit Direct Interface</div>
+              <div style="display:flex;gap:6px;margin-bottom:14px">
+                <button class="tabbtn active" id="cmd-rover" onclick="selectRobot('GROUND_01',this)"
+                  style="border:1px solid var(--bdr)">ROVER</button>
+                <button class="tabbtn" id="cmd-scout" onclick="selectRobot('AQUA_01',this)"
+                  style="border:1px solid var(--bdr)">SCOUT</button>
+              </div>
+              <div style="margin-bottom:14px">
+                <div class="small cmut-c mono" style="margin-bottom:7px">Control Mode</div>
+                <div style="display:flex;gap:4px;background:var(--bg3);padding:3px;border-radius:4px">
+                  <button class="tabbtn" onclick="setMode('MANUAL',this)" id="mode-manual">MANUAL</button>
+                  <button class="tabbtn" onclick="setMode('SEMI_AUTO',this)" id="mode-semi">SEMI AUTO</button>
+                  <button class="tabbtn active" onclick="setMode('FULLY_AUTO',this)" id="mode-auto">FULLY AUTO</button>
+                </div>
+              </div>
+              <div id="dpad-section">
+                <div class="small cmut-c mono" style="margin-bottom:9px">Navigation</div>
+                <div style="display:grid;grid-template-columns:repeat(3,42px);gap:5px;margin-bottom:14px">
+                  <div></div>
+                  <button class="ctrl-btn" style="padding:9px;gap:2px" onclick="sendCmd('MOVE_FORWARD')"><svg
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:16px;height:16px">
+                      <polyline points="18 15 12 9 6 15" />
+                    </svg><span style="font-size:8px" class="mono">FWD</span></button>
+                  <div></div>
+                  <button class="ctrl-btn" style="padding:9px;gap:2px" onclick="sendCmd('MOVE_LEFT')"><svg
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:16px;height:16px">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg><span style="font-size:8px" class="mono">L</span></button>
+                  <button class="ctrl-btn cdanger" style="padding:9px;gap:2px" onclick="sendCmd('HALT_ALL')"><svg
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:16px;height:16px">
+                      <rect x="6" y="6" width="12" height="12" />
+                    </svg><span style="font-size:8px;color:var(--red)" class="mono">STP</span></button>
+                  <button class="ctrl-btn" style="padding:9px;gap:2px" onclick="sendCmd('MOVE_RIGHT')"><svg
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:16px;height:16px">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg><span style="font-size:8px" class="mono">R</span></button>
+                  <div></div>
+                  <button class="ctrl-btn" style="padding:9px;gap:2px" onclick="sendCmd('MOVE_BACK')"><svg
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:16px;height:16px">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg><span style="font-size:8px" class="mono">BCK</span></button>
+                  <div></div>
+                </div>
+                <div class="g2" style="gap:8px">
+                  <button class="ctrl-btn" style="padding:11px" onclick="sendCmd('SCAN_SOIL')">
+                    <div class="cicon ic-em" style="width:30px;height:30px;border-radius:6px"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg></div>
+                    <div class="cname" style="font-size:9px">Soil Scan</div>
+                  </button>
+                  <button class="ctrl-btn" style="padding:11px" onclick="sendCmd('SAMPLE_WATER')">
+                    <div class="cicon ic-blu" style="width:30px;height:30px;border-radius:6px"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                      </svg></div>
+                    <div class="cname" style="font-size:9px">Water Probe</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="padding:18px">
+              <div class="stitle">Base Hub Status</div>
+              <div id="base-health" style="display:flex;flex-direction:column;gap:8px">
+                <div class="loading-block">
+                  <div class="spin"></div>
+                </div>
+              </div>
+              <div class="sep"></div>
+              <div class="g2" style="gap:8px">
+                <button class="ctrl-btn" onclick="sendCmd('RTB_PULSE')" style="padding:13px">
+                  <div class="cicon ic-em" style="width:32px;height:32px;border-radius:6px"><svg viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px">
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg></div>
+                  <div class="cname">RTB</div>
+                </button>
+                <button class="ctrl-btn cdanger" onclick="sendCmd('HALT_ALL')" style="padding:13px">
+                  <div class="cicon ic-red" style="width:32px;height:32px;border-radius:6px"><svg viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg></div>
+                  <div class="cname">E-STOP</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live -->
+        <div id="tab-live" class="atab" style="display:none">
+          <div class="g2" style="margin-bottom:12px">
+            <div class="camfeed online" id="cam-g">
+              <div class="cscanline"></div>
+              <div class="coverlay">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="1"
+                  style="opacity:0.3">
+                  <path d="M23 7l-7 5 7 5V7z" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" />
+                </svg>
+                <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">G-CAM-01 · AWAITING FEED</span>
+              </div>
+              <div class="clabel">GROUND ROVER · G-CAM-01</div>
+              <div class="cstatus"><span class="chip cem" style="font-size:8px">SECTION B-4</span></div>
+              <div class="cam-tel">
+                <div class="ctel-chip" id="live-ggps">---</div>
+                <div class="ctel-chip">24.5 FPS</div>
+              </div>
+            </div>
+            <div class="camfeed" id="cam-a">
+              <div class="coverlay">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1"
+                  style="opacity:0.3">
+                  <path d="M23 7l-7 5 7 5V7z" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" />
+                </svg>
+                <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">A-CAM-07 · AWAITING FEED</span>
+              </div>
+              <div class="clabel">AQUA SCOUT · A-CAM-07</div>
+              <div class="cstatus"><span class="chip cblu" style="font-size:8px">DELTA BASIN</span></div>
+              <div class="cam-tel">
+                <div class="ctel-chip" id="live-agps">---</div>
+                <div class="ctel-chip">24.5 FPS</div>
+              </div>
+            </div>
+          </div>
+          <div class="g2">
+            <div class="camfeed" id="cam-base">
+              <div class="coverlay">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1"
+                  style="opacity:0.3">
+                  <path d="M23 7l-7 5 7 5V7z" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" />
+                </svg>
+                <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">B-CAM-MAIN · HQ ENTRY</span>
+              </div>
+              <div class="clabel">BASE HUB · B-CAM-MAIN</div>
+              <div class="cstatus"><span class="chip camb" style="font-size:8px">HQ ENTRY</span></div>
+            </div>
+            <div class="camfeed" id="cam-soil">
+              <div class="coverlay">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="1"
+                  style="opacity:0.3">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">SOIL SCANNER · S-SCAN-01</span>
+              </div>
+              <div class="clabel">SOIL SCANNER · S-SCAN-01</div>
+              <div class="cstatus"><span class="chip cpur" style="font-size:8px">GRID 12</span></div>
+            </div>
+          </div>
+          <div
+            style="margin-top:12px;padding:10px 14px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr);display:flex;align-items:center;gap:8px">
+            <div class="live-dot"></div>
+            <span style="font-size:9px;font-family:var(--mono);color:var(--muted)">MJPEG STREAM — Connect cameras to see
+              live feed · Backend: <span style="color:var(--em)">http://localhost:8000/stream</span></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal-bg hidden">
+    <div class="modal-box">
+      <div class="modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg></div>
+      <div class="modal-title">Manual Override Required</div>
+      <div class="modal-body">This action bypasses the autonomous remediation protocol. Confirm to proceed.</div>
+      <div class="modal-btns">
+        <button class="mbtn mbtn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="mbtn mbtn-confirm" onclick="confirmCmd()">Confirm</button>
+      </div>
+    </div>
+  </div>
+  <div id="toasts"></div>
+
+  <script>
+    const API = 'http://localhost:5000/api';
+    let token = localStorage.getItem('token') || '';
+    let pollTimer = null, charts = {}, alertPage = 1, hasMoreAlerts = true;
+    let selectedRobot = 'GROUND_01', controlMode = 'FULLY_AUTO', pendingCmd = null;
+    let sparkOff = { g: 0, a: 0, b: 0 };
+
+    // ── AUTH ──
+    function ah(x = {}) { return { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}), ...x } }
+    async function af(path, opts = {}) {
+      const r = await fetch(API + path, { ...opts, headers: ah(opts.headers || {}) });
+      if (r.status === 401) { doLogout(); return null }
+      if (!r.ok) throw new Error(r.statusText);
+      return r.json();
+    }
+
+    document.getElementById('login-btn').onclick = doLogin;
+    document.getElementById('inp-pass').onkeydown = e => { if (e.key === 'Enter') doLogin() };
+
+    async function doLogin() {
+      const btn = document.getElementById('login-btn');
+      const err = document.getElementById('lerr');
+      btn.disabled = true; btn.textContent = 'Authenticating...';
+      err.classList.remove('show');
+      try {
+        const r = await fetch(API + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('inp-user').value.trim(), password: document.getElementById('inp-pass').value }) });
+        const d = await r.json();
+        if (r.ok && d.token) { token = d.token; localStorage.setItem('token', token); showApp() }
+        else { err.textContent = d.message || 'Invalid credentials'; err.classList.add('show') }
+      } catch (e) { err.textContent = 'Connection refused — is backend running on port 5000?'; err.classList.add('show') }
+      btn.disabled = false; btn.textContent = 'Access System';
+    }
+
+    function doLogout() {
+      token = ''; localStorage.removeItem('token'); clearInterval(pollTimer);
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('view-login').classList.remove('hidden');
+    }
+    document.getElementById('logout-btn').onclick = doLogout;
+
+    async function showApp() {
+      document.getElementById('view-login').classList.add('hidden');
+      document.getElementById('app').style.display = 'flex';
+      initCharts(); await loadAll();
+      pollTimer = setInterval(loadAll, 3000);
+    }
+
+    async function checkAuth() {
+      if (!token) return;
+      try { const r = await fetch(API + '/auth/verify', { headers: ah() }); if (r.ok) showApp(); else { token = ''; localStorage.removeItem('token') } } catch { }
+    }
+
+    // ── NAV ──
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      b.onclick = () => {
+        document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        b.classList.add('active');
+        document.getElementById('view-' + b.dataset.view).classList.add('active');
+      };
+    });
+
+    document.querySelectorAll('.tabbtn').forEach(b => {
+      b.onclick = () => {
+        document.querySelectorAll('.tabbtn').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.atab').forEach(t => t.style.display = 'none');
+        b.classList.add('active');
+        const el = document.getElementById('tab-' + b.dataset.tab);
+        if (el) el.style.display = 'block';
+      };
+    });
+
+    // Lang
+    const langs = { EN: { overview: 'OVERVIEW', mission: 'MISSION', intel: 'INTEL', command: 'COMMAND', live: 'LIVE' }, TW: { overview: 'NHWƐSO', mission: 'ADWUMA', intel: 'NYANSA', command: 'AHWƐFO', live: 'MPREMPREN' }, GA: { overview: 'KWA', mission: 'NITSUMƆ', intel: 'NILE', command: 'KWƐLƆI', live: 'AGBƐNƐ' }, EW: { overview: 'ETENAFE', mission: 'DƆWƆNA', intel: 'NUNYANYA', command: 'DZIKPƆLA', live: 'FIFI' }, FR: { overview: 'APERÇU', mission: 'MISSION', intel: 'RENS', command: 'COMMANDE', live: 'DIRECT' } };
+    document.querySelectorAll('.lbtn').forEach(b => {
+      b.onclick = () => {
+        document.querySelectorAll('.lbtn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        const d = langs[b.dataset.lang] || langs.EN;
+        document.querySelectorAll('.tabbtn').forEach(btn => { const l = d[btn.dataset.tab]; if (l) btn.textContent = l });
+      };
+    });
+
+    // Sidebar collapse
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      const cb = document.getElementById('collapse-btn');
+      const c = sb.classList.toggle('collapsed');
+      document.body.classList.toggle('sb-off', c);
+      cb.style.left = c ? '40px' : '208px';
+      cb.querySelector('svg').style.transform = c ? 'rotate(180deg)' : 'none';
+    }
+
+    // ── CHARTS ──
+    function initCharts() {
+      [['chart-power', '#ffaa00'], ['chart-env', '#00ffa0'], ['chart-env2', '#00ffa0'], ['chart-energy', '#ffaa00']].forEach(([id, col]) => {
+        const c = document.getElementById(id); if (!c) return;
+        charts[id] = new Chart(c.getContext('2d'), {
+          type: 'line',
+          data: { labels: [], datasets: [{ data: [], borderColor: col, backgroundColor: col + '14', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 }] },
+          options: {
+            responsive: true, animation: false,
+            plugins: { legend: { display: false }, tooltip: { backgroundColor: '#091018', titleColor: '#4a7060', bodyColor: col, borderColor: 'rgba(0,255,160,0.1)', borderWidth: 1 } },
+            scales: {
+              x: { grid: { color: 'rgba(0,255,160,0.04)' }, ticks: { color: '#2a5040', font: { family: "'Share Tech Mono'", size: 10 }, maxTicksLimit: 6 } },
+              y: { grid: { color: 'rgba(0,255,160,0.04)' }, ticks: { color: '#2a5040', font: { family: "'Share Tech Mono'", size: 10 } } }
+            }
+          }
+        });
+      });
+    }
+
+    function pushChart(id, lbl, val, max = 30) {
+      const c = charts[id]; if (!c) return;
+      c.data.labels.push(lbl); c.data.datasets[0].data.push(val);
+      if (c.data.labels.length > max) { c.data.labels.shift(); c.data.datasets[0].data.shift() }
+      c.update('none');
+    }
+
+    // ── DATA ──
+    async function loadAll() {
+      try {
+        const [s, h, e] = await Promise.all([af('/latest-stats'), af('/history'), af('/energy-history')]);
+        if (s) updateStats(s);
+        if (h) updateHist(h, e);
+        if (document.getElementById('view-asaase').classList.contains('active')) loadAsaase();
+      } catch (e) { console.error(e) }
+    }
+
+    function setText(id, v) { const el = document.getElementById(id); if (el && el.textContent !== String(v)) { el.textContent = v; el.classList.remove('count-up'); void el.offsetWidth; el.classList.add('count-up') } }
+    function setGauge(id, val, mn, mx) { const el = document.getElementById(id); if (!el) return; const p = Math.max(0, Math.min(1, (val - mn) / (mx - mn))); el.style.strokeDashoffset = 220 - p * 220 }
+    function flashCard(id) { const el = document.getElementById(id); if (el) { el.classList.remove('card-flash'); void el.offsetWidth; el.classList.add('card-flash') } }
+
+    function updateStats(d) {
+      if (d.env) { setText('s-treepct', (d.env.green_ratio * 100).toFixed(1)); const b = document.getElementById('env-bar'); if (b) b.style.width = (d.env.green_ratio * 100) + '%'; setText('env-ratio', (d.env.green_ratio * 100).toFixed(1) + '%'); const dev = (d.env.cover_change_pct >= 0 ? '+' : '') + d.env.cover_change_pct.toFixed(2) + '%'; setText('env-dev', dev); const de = document.getElementById('env-dev'); if (de) de.style.color = d.env.cover_change_pct >= 0 ? 'var(--em)' : 'var(--red)'; setText('env-exc', d.env.excavation_count || 0); setText('env-act', d.env.activity_count || 0) }
+      if (d.energy) { setText('s-energy', d.energy.energy_kwh.toFixed(4)); setText('e-avgpow', d.energy.avg_power_w.toFixed(1)); setText('e-kwh', d.energy.energy_kwh.toFixed(4)); setText('e-savings', '$' + ((d.energy.energy_kwh || 0) * 0.15).toFixed(2)) }
+      if (d.filtration) { const f = d.filtration, t = f.telemetry || {}, ac = f.actuators || {}; setText('s-state', f.state.replace(/_/g, ' ')); setText('filt-state-badge', f.state || 'OFFLINE'); const badge = document.getElementById('filt-state-badge'); if (badge) badge.className = 'chip ' + (f.state === 'FILTERING' ? 'cem' : f.state === 'ALERT' ? 'cred' : 'cblu'); setText('filt-net', (t.net_load_pct || 0) + '% Load'); setText('filt-clog', (t.bottle_clog_pct || 0) + '% Clog'); setText('filt-flow', (t.flow_lpm || 0) + ' LPM'); const cl = document.getElementById('filt-clog-overlay'); if (cl) cl.style.opacity = ((t.bottle_clog_pct || 0) / 100) * 0.8; const fw = document.getElementById('filt-water'); if (fw) fw.style.height = (80 - (t.net_load_pct || 0) * 0.3) + '%';['pipe-flow1', 'pipe-flow2'].forEach(id => { const el = document.getElementById(id); if (el) el.className = 'pipe-flow' + (ac.pump_active ? '' : ' off') }); setText('pump-status', ac.pump_active ? 'ACTIVE' : 'OFFLINE'); setText('maint-status', ac.gears_active ? 'GEARS LIFT' : ac.backwash_on ? 'BACKWASH' : 'STABLE'); flashCard('sc-state') }
+      if (d.health) { const hb = document.getElementById('health-badge'), ht = document.getElementById('health-text'); const cls = d.health.status === 'EXCELLENT' ? 'cem' : d.health.status === 'GOOD' ? 'cblu' : d.health.status === 'WARNING' ? 'camb' : 'cred'; hb.className = 'h-badge ' + cls; ht.textContent = d.health.score + '% ' + d.health.status; const ring = document.getElementById('eff-ring'); if (ring) ring.style.strokeDashoffset = 390 - (d.health.score / 100) * 390; setText('eff-score', d.health.score.toFixed(0) + '%') }
+      if (d.water) { const ph = d.water.ph, tu = d.water.turbidity_ntu, tp = d.water.temperature_c; setText('gauge-ph-val', ph.toFixed(2)); setText('gauge-turb-val', tu.toFixed(2)); setText('s-temp', tp.toFixed(1) + '°C'); setGauge('gauge-ph-arc', ph, 0, 14); setGauge('gauge-turb-arc', tu, 0, 10); setGauge('w-ph-arc', ph, 0, 14); setText('w-ph', ph.toFixed(2)); setText('w-temp', tp.toFixed(1) + '°C'); setText('w-turb', tu.toFixed(2) + ' NTU'); flashCard('sc-power') }
+      if (d.distribution && d.distribution.length) { const el = document.getElementById('dist-rows'); if (el) el.innerHTML = d.distribution.map(ev => { const lpm = (ev.volume_liters * 60).toFixed(1); const pct = Math.min(100, (ev.volume_liters * 60) * 4); return `<div class="drow"><div class="dhome">${ev.home}</div><div class="dbar-wrap"><div class="dbar" style="width:${pct}%"></div></div><div class="dlpm">${lpm} LPM</div></div>` }).join('') }
+    }
+
+    function updateHist(h, e) {
+      const ts = () => new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' });
+      if (e && e.length) { const l = e[0]; setText('s-power', l.power_w.toFixed(1)); setText('e-rpm', l.rpm || '--'); pushChart('chart-power', ts(), l.power_w); pushChart('chart-energy', ts(), l.power_w); flashCard('sc-power') }
+      if (h.env && h.env.length) { pushChart('chart-env', ts(), (h.env[0].green_ratio * 100).toFixed(1)); pushChart('chart-env2', ts(), (h.env[0].green_ratio * 100).toFixed(1)) }
+    }
+
+    // Turbine spin
+    let turbAngle = 0;
+    setInterval(() => { const el = document.getElementById('filt-turbine'); if (el) { turbAngle += 4; el.style.transform = `rotate(${turbAngle}deg)` } }, 50);
+
+    // ── ASAASE ──
+    async function loadAsaase() {
+      try {
+        const [st, g, a, al, bh] = await Promise.all([af('/asaase/status'), af('/asaase/ground/latest'), af('/asaase/aqua/latest'), af(`/asaase/alerts?page=${alertPage}&limit=10`), af('/asaase/health')]);
+        if (st) updateRobotSt(st); if (g && g.length) updateGround(g[0]); if (a && a.length) updateAqua(a[0]); if (al) updateAlerts(al); if (bh) updateBaseH(bh);
+        updateSparks();
+      } catch (e) { console.warn('ASAASE:', e) }
+    }
+
+    function updateRobotSt(s) {
+      setText('a-count', s.alert_count_24h || 0); setText('a-crit', s.critical_count_24h || 0);
+      const avg = Math.round(((s.ground?.battery_pct || 0) + (s.aqua?.battery_pct || 0) + 100) / 3); setText('a-batt', avg);
+      const gc = document.getElementById('rc-gs'); if (gc) { gc.textContent = s.ground?.online ? 'ONLINE' : 'OFFLINE'; gc.className = 'chip ' + (s.ground?.online ? 'cem' : 'cred') }
+      const ac = document.getElementById('rc-as'); if (ac) { ac.textContent = s.aqua?.online ? 'ONLINE' : 'OFFLINE'; ac.className = 'chip ' + (s.aqua?.online ? 'cblu' : 'cred') }
+      const ts = v => { if (!v) return '---'; const s = Math.floor(Date.now() / 1000 - v); return s < 60 ? s + 's' : s < 3600 ? Math.floor(s / 60) + 'm' : Math.floor(s / 3600) + 'h' };
+      setText('rc-gseen', ts(s.ground?.last_seen)); setText('rc-aseen', ts(s.aqua?.last_seen));
+    }
+
+    function updateGround(g) {
+      setText('rc-gbatt', (g.battery_pct || 0) + '%'); setText('rc-ggps', g.gps_lat ? `${g.gps_lat.toFixed(4)}, ${g.gps_lon.toFixed(4)}` : '---'); setText('rc-gclass', g.soil_classification || '---');
+      setText('m-glat', g.gps_lat ? g.gps_lat.toFixed(6) : '---'); setText('m-glon', g.gps_lon ? g.gps_lon.toFixed(6) : '---');
+      setText('live-ggps', g.gps_lat ? `${g.gps_lat.toFixed(4)}, ${g.gps_lon.toFixed(4)}` : '---');
+      setText('fd-gbatt', (g.battery_pct || 0) + '%'); setText('fd-gsig', g.soil_classification || '---');
+      const fd = document.getElementById('fd-g'); if (fd) fd.style.background = 'var(--em)';
+      const md = document.getElementById('map-gd'); if (md && g.gps_lat) { const x = 50 + (g.gps_lon - (-1.5)) * 80, y = 50 - (g.gps_lat - 6.5) * 80; md.style.left = Math.max(5, Math.min(95, x)) + '%'; md.style.top = Math.max(5, Math.min(95, y)) + '%' }
+      const intel = document.getElementById('intel-rows');
+      if (intel) intel.innerHTML = [{ label: 'Soil Confidence', val: (g.confidence_score || 0).toFixed(2), unit: 'SCORE', col: 'var(--em)' }, { label: 'Mercury MG/KG', val: '12.5', unit: 'CRIT', col: 'var(--red)' }, { label: 'Dispenser', val: g.dispenser_action || 'NONE', unit: 'ACT', col: 'var(--amber)' }].map(r => `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bdr)"><span class="small cmut-c mono">${r.label}</span><div style="text-align:right;font-family:var(--mono)"><span style="font-size:18px;font-weight:700;color:${r.col}">${r.val}</span><span class="small cmut-c" style="margin-left:5px">${r.unit}</span></div></div>`).join('');
+    }
+
+    function updateAqua(a) {
+      setText('rc-abatt', (a.battery_pct || 0) + '%'); setText('rc-agps', a.gps_lat ? `${a.gps_lat.toFixed(4)}, ${a.gps_lon.toFixed(4)}` : '---'); setText('rc-averdict', a.dual_stream_verdict || '---');
+      setText('live-agps', a.gps_lat ? `${a.gps_lat.toFixed(4)}, ${a.gps_lon.toFixed(4)}` : '---');
+      setText('fd-abatt', (a.battery_pct || 0) + '%'); setText('fd-asig', a.dual_stream_verdict || '---');
+      const fd = document.getElementById('fd-a'); if (fd) fd.style.background = 'var(--blue)';
+      const md = document.getElementById('map-ad'); if (md && a.gps_lat) { const x = 50 + (a.gps_lon - (-1.6)) * 80, y = 50 - (a.gps_lat - 6.5) * 80; md.style.left = Math.max(5, Math.min(95, x)) + '%'; md.style.top = Math.max(5, Math.min(95, y)) + '%' }
+      const intel = document.getElementById('intel-rows');
+      if (intel) { const extras = [{ label: 'Turbidity NTU', val: (a.turbidity_ntu || 0).toFixed(1), unit: 'TURB', col: 'var(--blue)' }, { label: 'pH Value', val: (a.ph_value || 0).toFixed(1), unit: 'pH', col: 'var(--amber)' }]; extras.forEach(r => { if (!intel.querySelector(`[data-akey="${r.label}"]`)) { const d = document.createElement('div'); d.setAttribute('data-akey', r.label); d.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bdr)'; d.innerHTML = `<span class="small cmut-c mono">${r.label}</span><div style="text-align:right;font-family:var(--mono)"><span style="font-size:18px;font-weight:700;color:${r.col}">${r.val}</span><span class="small cmut-c" style="margin-left:5px">${r.unit}</span></div>`; intel.appendChild(d) } }) }
+    }
+
+    function updateAlerts(al) {
+      hasMoreAlerts = al.length === 10;
+      document.getElementById('prev-page').disabled = alertPage === 1;
+      document.getElementById('next-page').disabled = !hasMoreAlerts;
+      setText('page-label', 'Page ' + alertPage);
+      const el = document.getElementById('alert-list'); if (!el) return;
+      if (!al.length) { el.innerHTML = '<div style="text-align:center;padding:28px;color:var(--muted);font-size:11px;font-family:var(--mono)">— SECTOR SECURE —</div>'; return }
+      el.innerHTML = al.map(a => `<div class="aitem ${a.severity.toLowerCase()}"><div class="atop"><span class="asev ${a.severity.toLowerCase()}">${a.severity}</span><span class="ats">${new Date(a.ts * 1000).toLocaleTimeString()}</span></div><div class="atype">${a.alert_type} DETECTED</div><div class="arobot">${a.robot_id}${a.sms_sent ? ' · SMS SENT' : ''}</div></div>`).join('');
+    }
+
+    function updateBaseH(h) {
+      const el = document.getElementById('base-health'); if (!el) return;
+      const items = [{ l: 'CPU Load', v: (h.cpu || 0).toFixed(0) + '%', s: 'CORE-UTIL' }, { l: 'Memory', v: (h.ram || 0).toFixed(0) + '%', s: 'SYSTEM-RES' }, { l: 'Latency', v: (h.radio_latency_ms || 0).toFixed(0) + 'ms', s: 'RADIO' }, { l: 'Disk', v: (h.disk || 0).toFixed(0) + '%', s: 'STORAGE' }];
+      el.innerHTML = items.map(it => `<div style="padding:9px 11px;background:var(--faint);border-radius:4px;border:1px solid var(--bdr)"><div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:3px">${it.l}</div><div class="rb"><span style="font-size:16px;font-weight:700;color:var(--em);font-family:var(--mono)">${it.v}</span><span style="font-size:8px;color:var(--muted);font-family:var(--mono)">${it.s}</span></div></div>`).join('');
+    }
+
+    let sparkData = { g: Array(20).fill(14), a: Array(20).fill(14), b: Array(20).fill(14) };
+    function updateSparks() {
+      [['g', 'var(--em)'], ['a', 'var(--blue)'], ['b', 'var(--amber)']].forEach(([k, col]) => {
+        sparkData[k].shift(); sparkData[k].push(10 + Math.random() * 12);
+        const svg = document.getElementById('spark-' + k); if (!svg) return;
+        const poly = svg.querySelector('polyline'); if (!poly) return;
+        const w = svg.clientWidth || 200;
+        poly.setAttribute('stroke', col);
+        poly.setAttribute('points', sparkData[k].map((y, i) => `${i * (w / 19)},${y}`).join(' '));
+      });
+    }
+
+    function changePage(d) { if (d === -1 && alertPage > 1) alertPage--; else if (d === 1 && hasMoreAlerts) alertPage++; loadAsaase() }
+
+    // ── CONTROL ──
+    async function handleControl(label, ep) {
+      addTLog(`Initiating ${label}...`, 'warn');
+      try { const r = await fetch(API + '/control/' + ep, { method: 'POST', headers: ah() }); if (r.ok) { addTLog(`${label} confirmed by EcoGuard Kernel.`, 'info'); notify(`${label} executed`, 'success') } else { addTLog(`${label} failed: ${r.status}`, 'err'); notify(`${label} failed`, 'error') } }
+      catch (e) { addTLog(`${label} failed: Network error.`, 'err'); notify('Network error', 'error') }
+    }
+    function addTLog(msg, type = 'info') {
+      const log = document.getElementById('term-log'); if (!log) return;
+      const ts = new Date().toLocaleTimeString([], { hour12: false });
+      const l = document.createElement('div'); l.className = 'tline';
+      l.innerHTML = `<span class="tts">[${ts}]</span><span class="t${type}">${type.toUpperCase()}:</span><span class="tmsg">${msg}</span>`;
+      log.appendChild(l); log.scrollTop = log.scrollHeight;
+      while (log.children.length > 40) log.removeChild(log.firstChild);
+    }
+    function handleTermInput(e) { if (e.key !== 'Enter') return; const i = document.getElementById('term-input'); if (i.value.trim()) { addTLog(i.value.trim(), 'info'); i.value = '' } }
+
+    // ── ROBOT CMD ──
+    function selectRobot(id, btn) { selectedRobot = id; document.getElementById('cmd-rover').classList.toggle('active', id === 'GROUND_01'); document.getElementById('cmd-scout').classList.toggle('active', id === 'AQUA_01') }
+    function setMode(m, btn) { controlMode = m;['mode-manual', 'mode-semi', 'mode-auto'].forEach(id => document.getElementById(id).classList.remove('active')); btn.classList.add('active'); const dp = document.getElementById('dpad-section'); if (dp) dp.style.opacity = m !== 'MANUAL' ? '0.35' : '1'; af('/asaase/control/mode', { method: 'POST', body: JSON.stringify({ robot_id: selectedRobot, mode: m }) }).then(() => notify('Mode: ' + m, 'info')).catch(() => notify('Mode change failed', 'error')) }
+    function sendCmd(cmd) { if (controlMode === 'FULLY_AUTO' && cmd !== 'HALT_ALL') { notify('Switch to MANUAL mode to send commands', 'warning'); return } if (controlMode === 'MANUAL' && cmd !== 'HALT_ALL') { pendingCmd = cmd; document.getElementById('modal').classList.remove('hidden'); return } execCmd(cmd) }
+    function confirmCmd() { closeModal(); if (pendingCmd) { execCmd(pendingCmd); pendingCmd = null } }
+    function closeModal() { document.getElementById('modal').classList.add('hidden') }
+    async function execCmd(cmd) { try { await af('/asaase/control/manual', { method: 'POST', body: JSON.stringify({ robot_id: selectedRobot, command: cmd }) }); notify('Command: ' + cmd, 'success') } catch (e) { notify('Command failed — robot may be offline', 'error') } }
+
+    // ── WAYPOINTS ──
+    let waypoints = [];
+    function mapClick(e) { const r = e.currentTarget.getBoundingClientRect(); const xp = ((e.clientX - r.left) / r.width * 100).toFixed(1), yp = ((e.clientY - r.top) / r.height * 100).toFixed(1); const lat = (6.5 + (50 - yp) * 0.001).toFixed(6), lon = (-1.5 + (xp - 50) * 0.001).toFixed(6); waypoints.push({ lat: +lat, lon: +lon, xp, yp }); renderWP() }
+    function renderWP() {
+      const wl = document.getElementById('wp-list'), wd = document.getElementById('wp-dots');
+      if (!wl || !wd) return;
+      if (!waypoints.length) { wl.innerHTML = '<div style="text-align:center;padding:20px;border:1px dashed var(--bdr);border-radius:4px;color:var(--muted);font-size:10px;font-family:var(--mono)">Click map to add waypoints</div>'; wd.innerHTML = ''; return }
+      wl.innerHTML = waypoints.map((w, i) => `<div class="wp-item"><div class="wpnum">${i + 1}</div><span>${w.lat}, ${w.lon}</span><button class="wpdel" onclick="removeWP(${i})">✕</button></div>`).join('');
+      wd.innerHTML = waypoints.map((w, i) => `<div style="position:absolute;left:${w.xp}%;top:${w.yp}%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--amber);border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#000;font-family:var(--mono);box-shadow:0 0 6px var(--amber)">${i + 1}</div>`).join('');
+    }
+    function removeWP(i) { waypoints.splice(i, 1); renderWP() }
+    function clearWaypoints() { waypoints = []; renderWP() }
+    async function uploadWaypoints() { if (!waypoints.length) { notify('No waypoints to upload', 'warning'); return } const rb = document.getElementById('wp-robot')?.value || 'GROUND_01'; const wps = waypoints.map(w => ({ lat: w.lat, lon: w.lon })); try { await af(rb.startsWith('GROUND') ? '/asaase/ground/waypoints' : '/asaase/aqua/route', { method: 'POST', body: JSON.stringify({ robot_id: rb, waypoints: wps }) }); notify(`${wps.length} waypoints uploaded`, 'success'); clearWaypoints() } catch (e) { notify('Upload failed', 'error') } }
+
+    // ── TOAST ──
+    function notify(msg, type = 'info') { const c = document.getElementById('toasts'); const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = `<span>${{ success: '✓', error: '✕', info: 'ℹ', warning: '⚠' }[type] || 'ℹ'}</span><span>${msg}</span>`; c.appendChild(t); setTimeout(() => t.remove(), 4000) }
+
+    // ── INIT ──
+    window.onload = () => {
+      document.querySelectorAll('.tts').forEach(el => el.textContent = '[' + new Date().toLocaleTimeString([], { hour12: false }) + ']');
+      checkAuth();
+    };
+  </script>
+</body>
+
+</html>

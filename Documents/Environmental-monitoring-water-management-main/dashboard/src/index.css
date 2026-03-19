@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+  /* Color Palette - HSL Tailored (Light Mode Default) */
+  --bg-main: 210 40% 98%;
+  --bg-card: 0 0% 100%;
+  --bg-glass-color: 0 0% 100%;
+  --bg-glass-alpha: 0.7;
+
+  --primary: 199 89% 48%; /* Neon Blue */
+  --secondary: 162 84% 39%; /* Emerald Green */
+  --accent: 263 70% 50%; /* Purple */
+
+  --text-main: 222 47% 11%;
+  --text-muted: 215 20% 45%;
+  --border: 214 32% 91%;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: hsl(var(--text-main));
+  background-color: hsl(var(--bg-main));
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark {
+  --bg-main: 222 47% 11%;
+  --bg-card: 222 47% 15%;
+  --bg-glass-color: 222 47% 15%;
+  --bg-glass-alpha: 0.7;
+
+  --primary: 199 89% 48%;
+  --secondary: 162 84% 39%;
+  --accent: 263 70% 50%;
+
+  --text-main: 210 40% 98%;
+  --text-muted: 215 20% 65%;
+  --border: 217 33% 17%;
+
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top right, hsl(var(--primary) / 0.1), transparent 400px),
+    radial-gradient(circle at bottom left, hsl(var(--accent) / 0.1), transparent 400px);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Glassmorphism Classes */
+.glass {
+  background: hsla(var(--bg-glass-color), var(--bg-glass-alpha));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+}
+
+.glass-card {
+  background: linear-gradient(135deg, hsl(var(--bg-card) / 0.8), hsl(var(--bg-card) / 0.4));
+  backdrop-filter: blur(10px);
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Outfit', sans-serif;
+  margin: 0;
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Layout Utilities */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-in {
+  animation-duration: 500ms;
+  animation-fill-mode: forwards;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.slide-in-from-bottom-4 {
+  animation-name: slideUp;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* ─── Missing animation keyframes (tailwindcss-animate polyfill) ─── */
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInFromBottom {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes zoomIn95 {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.slide-in-from-right-4 { animation-name: slideInFromRight; }
+.slide-in-from-left-4  { animation-name: slideInFromLeft; }
+.slide-in-from-bottom-4 { animation-name: slideInFromBottom; }
+.zoom-in-95            { animation-name: zoomIn95; }
+.delay-75  { animation-delay: 75ms; }
+.delay-150 { animation-delay: 150ms; }
