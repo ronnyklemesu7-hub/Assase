@@ -5,10 +5,10 @@ import sys
 
 def setup_database():
     print("ASAASE-DB: Initializing Database Auto-Setup...")
-    db_path = 'runs/data.db'
+    db_path = 'data/asaase.db'
     
     # Ensure data directory exists
-    os.makedirs('runs', exist_ok=True)
+    os.makedirs('data', exist_ok=True)
     
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
